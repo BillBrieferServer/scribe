@@ -655,8 +655,8 @@
                 });
             }).then(function(data) {
                 var html = data.soap_note
-                    .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN)\*\*/gi, '<strong></strong>')
-                    .replace(/\*\*([^*]+)\*\*/g, '<strong></strong>');
+                    .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN)\*\*/gi, '<strong>$1</strong>')
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
                 document.getElementById('soap-output').innerHTML = html;
                 
                 var demoTag = document.getElementById('soap-meta-demo');
@@ -781,7 +781,7 @@
             content.innerHTML = '<div class="spinner"></div>';
             
             api('/api/notes/' + id).then(function(note) {
-                content.innerHTML = '<div class="soap-output">' + (note.soap_note || '').replace(/\*\*([^*]+)\*\*/g, '<strong></strong>') + '</div>' +
+                content.innerHTML = '<div class="soap-output">' + (note.soap_note || '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') + '</div>' +
                     '<div class="note-actions">' +
                     '<button class="btn btn-secondary btn-sm" onclick="copyNoteText(this)">Copy</button>' +
                     '<button class="btn btn-danger btn-sm" onclick="deleteNote(' + id + ')">Delete</button>' +
