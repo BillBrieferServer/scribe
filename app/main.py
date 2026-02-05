@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from contextlib import asynccontextmanager
 
 from app.database import init_db
@@ -29,11 +29,11 @@ async def health():
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Serve index.html for root and any non-API routes (SPA)
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return FileResponse("static/index.html")
+    return FileResponse("static/index.html", media_type="text/html")
 
 @app.get("/{path:path}")
 async def catch_all(path: str):
     if not path.startswith("api/"):
-        return FileResponse("static/index.html")
+        return FileResponse("static/index.html", media_type="text/html")

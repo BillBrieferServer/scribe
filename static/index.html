@@ -1058,7 +1058,7 @@
                 const user = await api("/api/auth/me");
                 currentUser = user;
                 document.getElementById("user-name").textContent = user.name;
-                authScreen.classList.add("hidden");
+                 authScreen.classList.add("hidden");
                 mainApp.classList.remove("hidden");
             } catch (e) {
                 authScreen.classList.remove("hidden");
@@ -1080,7 +1080,7 @@
                 });
                 currentUser = data.user;
                 document.getElementById("user-name").textContent = data.user.name;
-                authScreen.classList.add("hidden");
+                 authScreen.classList.add("hidden");
                 mainApp.classList.remove("hidden");
             } catch (err) {
                 showAuthError(err.message);
