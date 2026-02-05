@@ -863,41 +863,18 @@
         // Deduplication safety net for speech recognition artifacts
         function deduplicateDictation(text) {
             if (!text) return text;
-            
-            // Split into sentences (by period, question mark, or newline)
-            var sentences = text.split(/(?<=[.?!])\s+|
-+/).filter(function(s) { return s.trim(); });
+            var sentences = text.split(/[.?!]+/).map(function(s) { return s.trim(); }).filter(function(s) { return s; });
             if (sentences.length < 2) return text;
-            
             var cleaned = [];
-            var lastSentence = '';
-            var duplicateCount = 0;
-            
+            var lastNorm = '';
             for (var i = 0; i < sentences.length; i++) {
-                var normalized = sentences[i].toLowerCase().trim().replace(/[^\w\s]/g, '');
-                var lastNormalized = lastSentence.toLowerCase().trim().replace(/[^\w\s]/g, '');
-                
-                // Check if this is a duplicate of the previous sentence
-                if (normalized === lastNormalized) {
-                    duplicateCount++;
-                    // Allow max 1 consecutive duplicate
-                    if (duplicateCount > 1) continue;
-                } else {
-                    duplicateCount = 0;
+                var norm = sentences[i].toLowerCase().replace(/[^a-z0-9\s]/g, '');
+                if (norm !== lastNorm) {
+                    cleaned.push(sentences[i]);
+                    lastNorm = norm;
                 }
-                
-                cleaned.push(sentences[i]);
-                lastSentence = sentences[i];
             }
-            
-            var result = cleaned.join(' ');
-            
-            // If we removed significant content, log it
-            if (result.length < text.length * 0.7) {
-                console.log('Removed duplicate text from speech recognition');
-            }
-            
-            return result;
+            return cleaned.join('. ') + '.';
         }
         
         document.getElementById('generate-btn').addEventListener('click', function() {
