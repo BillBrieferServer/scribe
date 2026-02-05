@@ -713,7 +713,7 @@
                 requestWakeLock();
             }
         });
-        var finalizedIndices = new Set();
+        var lastAddedText = '';
         
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -721,35 +721,37 @@
             recognition.continuous = true;
             recognition.interimResults = true;
             
-            recognition.onstart = function() {
-                finalizedIndices.clear();
-            };
-            
             recognition.onresult = function(e) {
                 var textarea = document.getElementById('dictation');
+                var finalText = '';
                 var interim = '';
                 
-                // Process from resultIndex to get new/changed results
-                for (var i = e.resultIndex; i < e.results.length; i++) {
-                    var result = e.results[i];
-                    var transcript = result[0].transcript;
-                    
-                    if (result.isFinal && !finalizedIndices.has(i)) {
-                        // Mark this index as finalized so we don't add it again
-                        finalizedIndices.add(i);
-                        
-                        // Append to textarea
-                        var text = transcript.trim();
-                        if (text) {
-                            var current = textarea.value;
-                            if (current && !current.endsWith(' ')) {
-                                current += ' ';
-                            }
-                            textarea.value = current + text + ' ';
-                        }
-                    } else if (!result.isFinal) {
-                        interim += transcript;
+                // Build complete final transcript from all final results
+                for (var i = 0; i < e.results.length; i++) {
+                    if (e.results[i].isFinal) {
+                        finalText += e.results[i][0].transcript;
+                    } else {
+                        interim += e.results[i][0].transcript;
                     }
+                }
+                
+                // Only add new text that wasn't added before
+                finalText = finalText.trim();
+                if (finalText && finalText !== lastAddedText) {
+                    // Find what's new by comparing with last added
+                    var newPart = finalText;
+                    if (lastAddedText && finalText.indexOf(lastAddedText) === 0) {
+                        newPart = finalText.substring(lastAddedText.length).trim();
+                    }
+                    
+                    if (newPart) {
+                        var current = textarea.value;
+                        if (current && !current.endsWith(' ')) {
+                            current += ' ';
+                        }
+                        textarea.value = current + newPart + ' ';
+                    }
+                    lastAddedText = finalText;
                 }
                 
                 updateWordCount();
@@ -770,7 +772,7 @@
         function startRecording() {
             if (!recognition) return;
             captureEncounterTime();
-            finalizedIndices.clear();
+            lastAddedText = '';
             isRecording = true;
             recognition.start();
             document.getElementById('mic-btn').classList.add('recording');
