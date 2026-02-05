@@ -718,32 +718,36 @@
             recognition = new SR();
             recognition.continuous = true;
             recognition.interimResults = true;
-            var lastProcessedIndex = 0;
-            var sessionId = 0;
+            var processedResults = new Set();
+            var lastFinalText = '';
             
             recognition.onstart = function() {
-                // Increment session to track restarts
-                sessionId++;
-                lastProcessedIndex = 0;
+                // Don't clear processedResults - keep tracking across restarts
             };
             recognition.onresult = function(e) {
                 var interim = '';
                 var textarea = document.getElementById('dictation');
                 
-                // Only process results we haven't seen yet
-                for (var i = lastProcessedIndex; i < e.results.length; i++) {
+                for (var i = 0; i < e.results.length; i++) {
                     var result = e.results[i];
                     if (result.isFinal) {
-                        // Append final result to textarea (once)
-                        var text = result[0].transcript;
-                        if (text && text.trim()) {
-                            var currentVal = textarea.value;
-                            if (currentVal && !currentVal.endsWith(' ')) {
-                                currentVal += ' ';
+                        var text = result[0].transcript.trim();
+                        // Create unique key from index + text to track what we've processed
+                        var key = i + ':' + text;
+                        
+                        if (text && !processedResults.has(key)) {
+                            processedResults.add(key);
+                            
+                            // Also check if this exact text was just added (duplicate phrase)
+                            if (text !== lastFinalText) {
+                                var currentVal = textarea.value;
+                                if (currentVal && !currentVal.endsWith(' ')) {
+                                    currentVal += ' ';
+                                }
+                                textarea.value = currentVal + text + ' ';
+                                lastFinalText = text;
                             }
-                            textarea.value = currentVal + text.trim() + ' ';
                         }
-                        lastProcessedIndex = i + 1;
                     } else {
                         interim += result[0].transcript;
                     }
@@ -765,6 +769,8 @@
         function startRecording() {
             if (!recognition) return;
             captureEncounterTime();
+            processedResults.clear();
+            lastFinalText = '';
             isRecording = true;
             recognition.start();
             document.getElementById('mic-btn').classList.add('recording');
