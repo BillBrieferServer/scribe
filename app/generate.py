@@ -117,7 +117,7 @@ async def extract_demographics(data: ExtractRequest, request: Request):
     
     try:
         response = client.messages.create(
-            model="claude-3-haiku-20240307",
+            model="claude-sonnet-4-20250514",
             max_tokens=500,
             system=EXTRACT_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": data.dictation}]
