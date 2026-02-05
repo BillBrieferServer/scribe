@@ -686,6 +686,33 @@
         });
         var recognition = null;
         var isRecording = false;
+        var wakeLock = null;
+        
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake lock acquired');
+                } catch (err) {
+                    console.log('Wake lock failed:', err);
+                }
+            }
+        }
+        
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+                console.log('Wake lock released');
+            }
+        }
+        
+        // Re-acquire wake lock if page becomes visible while recording
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible' && isRecording) {
+                requestWakeLock();
+            }
+        });
         var finalTranscript = '';
         
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -725,6 +752,7 @@
             isRecording = true;
             recognition.start();
             document.getElementById('mic-btn').classList.add('recording');
+            requestWakeLock();
             document.getElementById('dictation').classList.add('listening');
             document.getElementById('mic-hint').textContent = 'Tap to stop';
             document.getElementById('textarea-hint').textContent = 'Listening - state patient gender & age first...';
@@ -738,6 +766,7 @@
             isRecording = false;
             if (recognition) recognition.stop();
             document.getElementById('mic-btn').classList.remove('recording');
+            releaseWakeLock();
             document.getElementById('dictation').classList.remove('listening');
             document.getElementById('mic-hint').textContent = 'Tap to speak';
             document.getElementById('textarea-hint').textContent = 'Speak or type raw clinical notes';
