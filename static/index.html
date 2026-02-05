@@ -4,264 +4,1015 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Scribe - Voice to SOAP Notes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         :root {
-            --primary: #2563eb; --primary-dark: #1d4ed8; --danger: #dc2626;
-            --success: #16a34a; --gray-50: #f9fafb; --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-500: #6b7280;
-            --gray-700: #374151; --gray-900: #111827;
+            --bg-deepest: #0a1520;
+            --bg-card: #0f1d2a;
+            --bg-input: #132232;
+            --bg-hover: #1a2d3f;
+            --border: #1e3a4f;
+            --border-focus: #2d5a7b;
+            
+            --teal: #4ecdc4;
+            --teal-dark: #3ba89f;
+            --teal-glow: rgba(78, 205, 196, 0.3);
+            --blue: #5b9bd5;
+            --blue-dark: #1e3a5f;
+            --red: #e74c3c;
+            --red-dark: #2d1518;
+            --red-border: #5c2020;
+            --amber: #f0a500;
+            --amber-dark: #2d2010;
+            --green: #2ecc71;
+            
+            --text-primary: #e8eef4;
+            --text-secondary: #8a9bae;
+            --text-muted: #5a6a7a;
+            --text-faint: #3a4a5a;
+            
+            --font-sans: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'DM Mono', monospace;
+            --font-display: 'Playfair Display', Georgia, serif;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--gray-50); color: var(--gray-900); min-height: 100vh; }
-        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gray-200); margin-bottom: 16px; }
-        .header h1 { font-size: 1.5rem; color: var(--primary); }
-        .header-right { display: flex; align-items: center; gap: 12px; }
-        .user-name { font-size: 0.875rem; color: var(--gray-500); }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-primary:disabled { background: var(--gray-300); cursor: not-allowed; }
-        .btn-secondary { background: var(--gray-200); color: var(--gray-700); }
-        .btn-secondary:hover { background: var(--gray-300); }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-link { background: none; color: var(--primary); padding: 4px 8px; }
-        .btn-sm { padding: 6px 12px; font-size: 0.875rem; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--gray-700); }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 1rem; }
-        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; }
-        .card-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 16px; }
-        .auth-container { max-width: 400px; margin: 60px auto; padding: 0 16px; }
-        .auth-card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .auth-title { font-size: 1.5rem; text-align: center; margin-bottom: 24px; color: var(--primary); }
-        .auth-footer { text-align: center; margin-top: 20px; color: var(--gray-500); }
-        .auth-footer a { color: var(--primary); text-decoration: none; }
-        .tabs { display: flex; border-bottom: 2px solid var(--gray-200); margin-bottom: 20px; }
-        .tab { padding: 12px 24px; border: none; background: none; font-size: 1rem; color: var(--gray-500); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
-        .mic-container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .mic-btn { width: 100px; height: 100px; border-radius: 50%; border: none; background: var(--gray-200); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
-        .mic-btn.recording { background: var(--danger); animation: pulse 1.5s infinite; }
-        .mic-btn svg { width: 40px; height: 40px; fill: var(--gray-700); }
-        .mic-btn.recording svg { fill: white; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .mic-status { margin-top: 12px; font-size: 0.875rem; color: var(--gray-500); }
-        .demographics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; padding: 16px; background: var(--gray-100); border-radius: 8px; margin: 16px 0; }
-        .demo-field { display: flex; flex-direction: column; }
-        .demo-field label { font-size: 0.75rem; color: var(--gray-500); margin-bottom: 4px; }
-        .demo-field input, .demo-field select { padding: 8px; border: 1px solid var(--gray-300); border-radius: 6px; font-size: 0.875rem; }
-        .soap-output { background: white; border: 1px solid var(--gray-200); border-radius: 8px; padding: 20px; white-space: pre-wrap; font-family: inherit; line-height: 1.6; min-height: 200px; }
-        .soap-output strong { color: var(--primary-dark); }
-        .notes-list { display: flex; flex-direction: column; gap: 12px; }
-        .note-card { background: white; border: 1px solid var(--gray-200); border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; }
-        .note-card:hover { border-color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .note-card.expanded { border-color: var(--primary); }
-        .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .note-title { font-weight: 500; margin-bottom: 4px; }
-        .note-date { font-size: 0.75rem; color: var(--gray-500); }
-        .note-complaint { font-size: 0.875rem; color: var(--gray-500); margin-top: 4px; }
-        .note-content { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--gray-200); }
-        .note-actions { display: flex; gap: 8px; margin-top: 12px; }
-        .message { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
-        .message.error { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
-        .message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
-        .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .hidden { display: none !important; }
-        .text-center { text-align: center; }
-        .mb-4 { margin-bottom: 16px; }
-        .flex { display: flex; }
-        .gap-2 { gap: 8px; }
-        .justify-between { justify-content: space-between; }
-        .items-center { align-items: center; }
+        
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-deepest);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 0.4; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        @keyframes wave {
+            0%, 100% { height: 8px; }
+            50% { height: 24px; }
+        }
+        
+        .fade-in { animation: fadeInUp 0.3s ease-out; }
+        
+        /* Container */
+        .container { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(180deg, #12232f 0%, var(--bg-deepest) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-mark {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            font-size: 20px;
+            color: white;
+        }
+        .logo-text h1 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+        .logo-text .subtitle {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            background: var(--bg-card);
+            color: var(--text-muted);
+        }
+        .status-badge.listening {
+            background: var(--red-dark);
+            color: var(--red);
+        }
+        .status-badge.processing {
+            background: var(--blue-dark);
+            color: var(--blue);
+        }
+        .status-badge.done {
+            background: rgba(78, 205, 196, 0.15);
+            color: var(--teal);
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .status-badge.listening .status-dot,
+        .status-badge.processing .status-dot {
+            animation: pulse 1s infinite;
+        }
+        .user-info {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .btn-logout {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .btn-logout:hover { color: var(--text-secondary); }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            margin-top: 1px;
+        }
+        .tab {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            background: none;
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .tab:hover { color: var(--text-secondary); }
+        .tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--teal);
+        }
+        .tab-badge {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            background: var(--teal);
+            color: var(--bg-deepest);
+            text-transform: uppercase;
+        }
+        
+        /* Main content */
+        .main-content { padding: 24px 0 40px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeInUp 0.3s ease-out; }
+        
+        /* Microphone Section */
+        .mic-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 0;
+        }
+        .mic-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: linear-gradient(145deg, var(--bg-card), var(--bg-input));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .mic-btn svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--text-secondary);
+            transition: fill 0.3s;
+        }
+        .mic-btn:hover { border-color: var(--border-focus); }
+        .mic-btn:hover svg { fill: var(--text-primary); }
+        .mic-btn.recording {
+            background: linear-gradient(145deg, var(--red-dark), #1a0a0a);
+            border-color: var(--red);
+        }
+        .mic-btn.recording svg { fill: var(--red); }
+        .mic-btn.recording::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--red);
+            animation: ripple 1.5s infinite;
+        }
+        .mic-hint {
+            margin-top: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .wave-bars {
+            display: none;
+            gap: 3px;
+            height: 32px;
+            align-items: center;
+            margin-top: 12px;
+        }
+        .wave-bars.active { display: flex; }
+        .wave-bar {
+            width: 4px;
+            background: var(--red);
+            border-radius: 2px;
+            animation: wave 0.5s ease-in-out infinite;
+        }
+        .wave-bar:nth-child(1) { animation-delay: 0s; }
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(5) { animation-delay: 0s; }
+        
+        /* Dictation Area */
+        .dictation-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .dictation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .word-count {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .dictation-textarea {
+            width: 100%;
+            min-height: 150px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            color: var(--text-primary);
+            resize: vertical;
+            transition: all 0.3s;
+        }
+        .dictation-textarea::placeholder { color: var(--text-muted); }
+        .dictation-textarea:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+        }
+        .dictation-textarea.listening {
+            background: var(--red-dark);
+            border-color: var(--red-border);
+        }
+        
+        /* Demographics Pills */
+        .demographics-bar {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        .demographics-bar.visible { display: block; }
+        .demographics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .demographics-title {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--teal);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .demographics-hint {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+        .demographics-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .demo-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .demo-pill:hover {
+            border-color: var(--border-focus);
+            background: var(--bg-hover);
+        }
+        .demo-pill-label {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .demo-pill-value {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+        .demo-pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+        .demo-pill-dot.medium { background: var(--amber); }
+        .demo-pill-dot.low { background: var(--red); }
+        .demo-pill input, .demo-pill select {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: var(--font-sans);
+            width: 90px;
+            outline: none;
+        }
+        .demo-pill select { cursor: pointer; width: 100px; }
+        .demo-pill select option { background: var(--bg-card); }
+        
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+            color: var(--bg-deepest);
+            box-shadow: 0 4px 15px var(--teal-glow);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--teal-glow);
+        }
+        .btn-primary:disabled {
+            background: linear-gradient(135deg, var(--blue-dark), #152535);
+            color: var(--blue);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .btn-secondary:hover {
+            border-color: var(--border-focus);
+            color: var(--text-primary);
+        }
+        .btn-dashed {
+            background: transparent;
+            border: 1px dashed var(--border);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+        .btn-dashed:hover {
+            border-color: var(--text-muted);
+            color: var(--text-secondary);
+        }
+        .btn-danger {
+            background: var(--red-dark);
+            border: 1px solid var(--red-border);
+            color: var(--red);
+        }
+        .btn-danger:hover { background: #3d1a1a; }
+        .btn-sm { padding: 8px 16px; font-size: 0.8rem; }
+        .btn-copy.copied {
+            background: var(--teal);
+            border-color: var(--teal);
+            color: var(--bg-deepest);
+        }
+        
+        /* Workflow Indicator */
+        .workflow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+        .workflow-step.active {
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+        }
+        .workflow-step.done { color: var(--teal); }
+        .workflow-arrow {
+            color: var(--text-faint);
+            font-size: 0.6rem;
+        }
+        
+        /* SOAP Output */
+        .soap-card {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        .soap-card.visible { display: block; }
+        .soap-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .soap-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .soap-meta-tag {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            background: var(--bg-hover);
+            border-radius: 4px;
+            color: var(--text-secondary);
+        }
+        .soap-actions { display: flex; gap: 8px; }
+        .soap-content { padding: 20px; }
+        .soap-label-input {
+            width: 100%;
+            padding: 10px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            margin-bottom: 16px;
+        }
+        .soap-label-input::placeholder { color: var(--text-muted); }
+        .soap-label-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+        }
+        .soap-output {
+            font-family: var(--font-sans);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+        .soap-output .section-header {
+            display: block;
+            background: linear-gradient(90deg, var(--bg-input), transparent);
+            border-left: 3px solid var(--teal);
+            padding: 8px 12px;
+            margin: 20px 0 12px 0;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--teal);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .soap-output .section-header:first-child { margin-top: 0; }
+        .soap-output .verify-tag {
+            background: var(--amber-dark);
+            border-left: 3px solid var(--amber);
+            color: var(--amber);
+            padding: 2px 6px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+        
+        /* Auth Screens */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+        .auth-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .auth-logo .logo-mark {
+            width: 56px;
+            height: 56px;
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+        .auth-logo h1 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--text-primary);
+        }
+        .auth-logo .subtitle {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+        }
+        .auth-tab:hover { color: var(--text-secondary); }
+        .auth-tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--teal);
+        }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .form-input::placeholder { color: var(--text-muted); }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px var(--teal-glow);
+        }
+        .verify-code-input {
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 1.8rem;
+            letter-spacing: 8px;
+            padding: 16px;
+        }
+        .auth-error {
+            display: none;
+            padding: 12px 16px;
+            background: var(--red-dark);
+            border-left: 3px solid var(--red);
+            border-radius: 4px;
+            color: var(--red);
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+        }
+        .auth-error.visible { display: block; }
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        .auth-footer a {
+            color: var(--teal);
+            text-decoration: none;
+        }
+        .auth-footer a:hover { text-decoration: underline; }
+        
+        /* Notes List */
+        .notes-container { animation: fadeInUp 0.3s ease-out; }
         .date-group { margin-bottom: 24px; }
-        .date-group-header { font-size: 0.875rem; color: var(--gray-500); margin-bottom: 12px; font-weight: 500; }
-        .empty-state { text-align: center; padding: 40px; color: var(--gray-500); }
-        .empty-state svg { width: 64px; height: 64px; fill: var(--gray-300); margin-bottom: 16px; }
+        .date-group-header {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+        .note-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .note-card:hover {
+            border-color: var(--border-focus);
+            background: var(--bg-hover);
+        }
+        .note-card.expanded { border-color: var(--teal); }
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .note-time {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .note-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .note-pill {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            color: var(--text-secondary);
+        }
+        .note-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .note-complaint {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .note-content {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .note-card.expanded .note-content { display: block; }
+        .note-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            fill: var(--text-faint);
+            margin-bottom: 16px;
+        }
+        .empty-state p { margin-bottom: 8px; }
+        
+        /* Loading */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--teal);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-state {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        /* Utilities */
+        .hidden { display: none !important; }
+        
+        /* Mobile */
+        @media (max-width: 600px) {
+            .header-inner { flex-wrap: wrap; gap: 12px; }
+            .status-badge { order: 3; width: 100%; justify-content: center; }
+            .actions { flex-direction: column; }
+            .actions .btn { width: 100%; }
+            .soap-toolbar { flex-direction: column; align-items: stretch; }
+            .soap-actions { justify-content: flex-end; }
+            .workflow { gap: 2px; }
+            .workflow-step { padding: 4px 6px; font-size: 0.6rem; }
+        }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- Auth: Login -->
-        <div id="login-screen" class="auth-container">
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="auth-container">
             <div class="auth-card">
-                <h2 class="auth-title">Scribe</h2>
-                <div id="login-error" class="message error hidden"></div>
-                <form id="login-form">
+                <div class="auth-logo">
+                    <div class="logo-mark">S</div>
+                    <h1>Scribe</h1>
+                    <div class="subtitle">Voice → SOAP Notes</div>
+                </div>
+                
+                <div id="auth-error" class="auth-error"></div>
+                
+                <div class="auth-tabs" id="auth-tabs-container">
+                    <button class="auth-tab active" data-form="login">Sign In</button>
+                    <button class="auth-tab" data-form="register">Register</button>
+                </div>
+                
+                <form id="login-form" class="auth-form active">
                     <div class="form-group">
-                        <label for="login-email">Email</label>
-                        <input type="email" id="login-email" required autocomplete="email">
+                        <label>Email</label>
+                        <input type="email" id="login-email" class="form-input" required autocomplete="email">
                     </div>
                     <div class="form-group">
-                        <label for="login-password">Password</label>
-                        <input type="password" id="login-password" required autocomplete="current-password">
+                        <label>Password</label>
+                        <input type="password" id="login-password" class="form-input" required autocomplete="current-password">
                     </div>
                     <button type="submit" class="btn btn-primary" style="width:100%">Sign In</button>
                 </form>
-                <p class="auth-footer">Dont have an account? <a href="#" id="show-register">Register</a></p>
-            </div>
-        </div>
-        
-        <!-- Auth: Register -->
-        <div id="register-screen" class="auth-container hidden">
-            <div class="auth-card">
-                <h2 class="auth-title">Create Account</h2>
-                <div id="register-error" class="message error hidden"></div>
-                <form id="register-form">
+                
+                <form id="register-form" class="auth-form">
                     <div class="form-group">
-                        <label for="register-name">Full Name</label>
-                        <input type="text" id="register-name" required autocomplete="name">
+                        <label>Full Name</label>
+                        <input type="text" id="register-name" class="form-input" required autocomplete="name">
                     </div>
                     <div class="form-group">
-                        <label for="register-email">Email</label>
-                        <input type="email" id="register-email" required autocomplete="email">
+                        <label>Email</label>
+                        <input type="email" id="register-email" class="form-input" required autocomplete="email">
                     </div>
                     <div class="form-group">
-                        <label for="register-password">Password</label>
-                        <input type="password" id="register-password" required minlength="8" autocomplete="new-password">
+                        <label>Password</label>
+                        <input type="password" id="register-password" class="form-input" required minlength="8" autocomplete="new-password">
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width:100%">Register</button>
+                    <button type="submit" class="btn btn-primary" style="width:100%">Create Account</button>
                 </form>
-                <p class="auth-footer">Already have an account? <a href="#" id="show-login">Sign In</a></p>
-            </div>
-        </div>
-        
-        <!-- Auth: Verify -->
-        <div id="verify-screen" class="auth-container hidden">
-            <div class="auth-card">
-                <h2 class="auth-title">Verify Email</h2>
-                <p class="text-center mb-4" style="color: var(--gray-500)">We sent a 6-digit code to <span id="verify-email-display"></span></p>
-                <div id="verify-error" class="message error hidden"></div>
-                <form id="verify-form">
+                
+                <div id="verify-form" class="auth-form">
+                    <p style="text-align:center; color:var(--text-secondary); margin-bottom:20px;">
+                        Enter the 6-digit code sent to<br><strong id="verify-email-display"></strong>
+                    </p>
                     <div class="form-group">
-                        <label for="verify-code">Verification Code</label>
-                        <input type="text" id="verify-code" required maxlength="6" pattern="[0-9]{6}" style="text-align:center; font-size:1.5rem; letter-spacing:0.5rem" autocomplete="one-time-code">
+                        <input type="text" id="verify-code" class="form-input verify-code-input" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" placeholder="000000">
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width:100%">Verify</button>
-                </form>
-                <p class="auth-footer"><a href="#" id="back-to-register">Back to Register</a></p>
+                    <button type="button" id="verify-btn" class="btn btn-primary" style="width:100%">Verify Email</button>
+                    <p class="auth-footer"><a href="#" id="back-to-register">Back to Register</a></p>
+                </div>
             </div>
         </div>
         
         <!-- Main App -->
         <div id="main-app" class="hidden">
-            <div class="container">
-                <header class="header">
-                    <h1>Scribe</h1>
-                    <div class="header-right">
-                        <span class="user-name" id="user-name"></span>
-                        <button class="btn btn-link btn-sm" id="logout-btn">Logout</button>
-                    </div>
-                </header>
-                
-                <div class="tabs">
-                    <button class="tab active" data-tab="new">New Note</button>
-                    <button class="tab" data-tab="notes">My Notes</button>
-                </div>
-                
-                <!-- New Note Tab -->
-                <div id="tab-new" class="tab-content">
-                    <div class="card">
-                        <div class="mic-container">
-                            <button class="mic-btn" id="mic-btn" title="Click to start recording">
-                                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-                            </button>
-                            <p class="mic-status" id="mic-status">Tap to start dictation</p>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="dictation">Dictation</label>
-                            <textarea id="dictation" rows="6" placeholder="Speak or type your clinical notes here..."></textarea>
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <button class="btn btn-secondary" id="extract-btn">Extract Demographics</button>
-                            <button class="btn btn-primary" id="generate-btn" disabled>Generate SOAP</button>
-                        </div>
-                    </div>
-                    
-                    <div class="demographics" id="demographics">
-                        <div class="demo-field">
-                            <label>Gender</label>
-                            <select id="demo-gender">
-                                <option value="">--</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                        </div>
-                        <div class="demo-field">
-                            <label>Age</label>
-                            <input type="text" id="demo-age" placeholder="e.g., 45">
-                        </div>
-                        <div class="demo-field">
-                            <label>Visit Type</label>
-                            <select id="demo-visit">
-                                <option value="">--</option>
-                                <option value="New Patient">New Patient</option>
-                                <option value="Follow-up">Follow-up</option>
-                                <option value="Annual Exam">Annual Exam</option>
-                                <option value="Urgent">Urgent</option>
-                                <option value="Consultation">Consultation</option>
-                            </select>
-                        </div>
-                        <div class="demo-field">
-                            <label>Specialty</label>
-                            <input type="text" id="demo-specialty" placeholder="e.g., Family Medicine">
-                        </div>
-                        <div class="demo-field" style="grid-column: span 2;">
-                            <label>Chief Complaint</label>
-                            <input type="text" id="demo-complaint" placeholder="e.g., chest pain">
-                        </div>
-                    </div>
-                    
-                    <div class="card" id="soap-card" style="display:none">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="card-title" style="margin:0">SOAP Note</h3>
-                            <div class="flex gap-2">
-                                <button class="btn btn-secondary btn-sm" id="copy-btn">Copy</button>
-                                <button class="btn btn-primary btn-sm" id="save-btn">Save</button>
+            <header class="header">
+                <div class="container">
+                    <div class="header-inner">
+                        <div class="logo">
+                            <div class="logo-mark">S</div>
+                            <div class="logo-text">
+                                <h1>Scribe</h1>
+                                <div class="subtitle">Voice → SOAP Notes</div>
                             </div>
                         </div>
-                        <div class="form-group" style="margin-bottom:8px">
-                            <input type="text" id="note-label" placeholder="Note label (optional)">
+                        <div class="status-badge" id="status-badge">
+                            <span class="status-dot"></span>
+                            <span id="status-text">Ready</span>
                         </div>
-                        <div class="soap-output" id="soap-output"></div>
+                        <div class="header-right">
+                            <span class="user-info" id="user-name"></span>
+                            <button class="btn-logout" id="logout-btn">Logout</button>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- My Notes Tab -->
-                <div id="tab-notes" class="tab-content hidden">
-                    <div id="notes-loading" class="text-center" style="padding:40px">
-                        <div class="spinner"></div>
+            </header>
+            
+            <div class="tabs">
+                <div class="container" style="display:flex; padding:0;">
+                    <button class="tab active" data-tab="new">New Note</button>
+                    <button class="tab" data-tab="notes">My Notes <span class="tab-badge hidden" id="soap-ready-badge">Ready</span></button>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="container">
+                    <!-- New Note Tab -->
+                    <div id="tab-new" class="tab-content active">
+                        <div class="mic-section">
+                            <button class="mic-btn" id="mic-btn">
+                                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                            </button>
+                            <div class="mic-hint" id="mic-hint">Tap to speak</div>
+                            <div class="wave-bars" id="wave-bars">
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="dictation-card">
+                            <div class="dictation-header">
+                                <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);">DICTATION</span>
+                                <span class="word-count" id="word-count">0 words</span>
+                            </div>
+                            <textarea id="dictation" class="dictation-textarea" placeholder="Speak or type your clinical notes here..."></textarea>
+                        </div>
+                        
+                        <div class="demographics-bar" id="demographics-bar">
+                            <div class="demographics-header">
+                                <div class="demographics-title">✓ Auto-Detected</div>
+                                <div class="demographics-hint">Click to override</div>
+                            </div>
+                            <div class="demographics-pills" id="demographics-pills"></div>
+                        </div>
+                        
+                        <div class="actions">
+                            <button class="btn btn-dashed" id="sample-btn">Load Sample</button>
+                            <button class="btn btn-secondary" id="clear-btn">Clear All</button>
+                            <button class="btn btn-primary" id="generate-btn" disabled style="margin-left:auto;">Generate SOAP Note</button>
+                        </div>
+                        
+                        <div class="workflow" id="workflow">
+                            <div class="workflow-step active" data-step="dictate">🎤 Dictate</div>
+                            <span class="workflow-arrow">→</span>
+                            <div class="workflow-step" data-step="detect">🔍 Detect</div>
+                            <span class="workflow-arrow">→</span>
+                            <div class="workflow-step" data-step="process">⚙️ Process</div>
+                            <span class="workflow-arrow">→</span>
+                            <div class="workflow-step" data-step="copy">📋 Copy</div>
+                        </div>
+                        
+                        <div class="soap-card" id="soap-card">
+                            <div class="soap-toolbar">
+                                <div class="soap-meta" id="soap-meta"></div>
+                                <div class="soap-actions">
+                                    <button class="btn btn-secondary btn-sm" id="edit-soap-btn">Edit</button>
+                                    <button class="btn btn-secondary btn-sm btn-copy" id="copy-btn">Copy to Clipboard</button>
+                                    <button class="btn btn-primary btn-sm" id="save-btn">Save Note</button>
+                                </div>
+                            </div>
+                            <div class="soap-content">
+                                <input type="text" id="note-label" class="soap-label-input" placeholder="Note label (optional, e.g., Patient initials)">
+                                <div class="soap-output" id="soap-output"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="notes-empty" class="empty-state hidden">
-                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                        <p>No notes yet</p>
-                        <p style="font-size:0.875rem">Create your first note in the New Note tab</p>
+                    
+                    <!-- My Notes Tab -->
+                    <div id="tab-notes" class="tab-content">
+                        <div id="notes-loading" class="loading-state">
+                            <div class="spinner"></div>
+                        </div>
+                        <div id="notes-empty" class="empty-state hidden">
+                            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                            <p>No notes yet</p>
+                            <p style="font-size:0.875rem;">Create your first note in the New Note tab</p>
+                        </div>
+                        <div id="notes-list" class="notes-container"></div>
                     </div>
-                    <div id="notes-list" class="notes-list"></div>
                 </div>
             </div>
         </div>
     </div>
     
     <script>
+        // State
         let currentUser = null;
         let pendingEmail = null;
         let notes = [];
         let expandedNoteId = null;
         let recognition = null;
         let isRecording = false;
+        let demographics = { gender: null, age: null, visitType: null, specialty: null, chiefComplaint: null, confidence: 0 };
         
-        const screens = {
-            login: document.getElementById("login-screen"),
-            register: document.getElementById("register-screen"),
-            verify: document.getElementById("verify-screen"),
-            main: document.getElementById("main-app")
-        };
+        // Elements
+        const authScreen = document.getElementById("auth-screen");
+        const mainApp = document.getElementById("main-app");
         
+        // API helper
         async function api(endpoint, options = {}) {
             const res = await fetch(endpoint, {
                 ...options,
@@ -275,36 +1026,50 @@
             return res.json();
         }
         
-        function showScreen(name) {
-            Object.values(screens).forEach(s => s.classList.add("hidden"));
-            screens[name].classList.remove("hidden");
-        }
-        
-        document.querySelectorAll(".tab").forEach(tab => {
+        // Auth tab switching
+        document.querySelectorAll(".auth-tab").forEach(tab => {
             tab.addEventListener("click", () => {
-                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-                document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+                document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
                 tab.classList.add("active");
-                document.getElementById("tab-" + tab.dataset.tab).classList.remove("hidden");
-                if (tab.dataset.tab === "notes") loadNotes();
+                document.getElementById(tab.dataset.form + "-form").classList.add("active");
+                hideAuthError();
             });
         });
         
+        function showAuthError(msg) {
+            const el = document.getElementById("auth-error");
+            el.textContent = msg;
+            el.classList.add("visible");
+        }
+        function hideAuthError() {
+            document.getElementById("auth-error").classList.remove("visible");
+        }
+        
+        function showVerifyForm() {
+            document.getElementById("auth-tabs-container").classList.add("hidden");
+            document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
+            document.getElementById("verify-form").classList.add("active");
+        }
+        
+        // Check auth
         async function checkAuth() {
             try {
                 const user = await api("/api/auth/me");
                 currentUser = user;
                 document.getElementById("user-name").textContent = user.name;
-                showScreen("main");
+                authScreen.classList.add("hidden");
+                mainApp.classList.remove("hidden");
             } catch (e) {
-                showScreen("login");
+                authScreen.classList.remove("hidden");
+                mainApp.classList.add("hidden");
             }
         }
         
+        // Login
         document.getElementById("login-form").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const errorEl = document.getElementById("login-error");
-            errorEl.classList.add("hidden");
+            hideAuthError();
             try {
                 const data = await api("/api/auth/login", {
                     method: "POST",
@@ -315,17 +1080,17 @@
                 });
                 currentUser = data.user;
                 document.getElementById("user-name").textContent = data.user.name;
-                showScreen("main");
+                authScreen.classList.add("hidden");
+                mainApp.classList.remove("hidden");
             } catch (err) {
-                errorEl.textContent = err.message;
-                errorEl.classList.remove("hidden");
+                showAuthError(err.message);
             }
         });
         
+        // Register
         document.getElementById("register-form").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const errorEl = document.getElementById("register-error");
-            errorEl.classList.add("hidden");
+            hideAuthError();
             const email = document.getElementById("register-email").value;
             try {
                 await api("/api/auth/register", {
@@ -338,17 +1103,15 @@
                 });
                 pendingEmail = email;
                 document.getElementById("verify-email-display").textContent = email;
-                showScreen("verify");
+                showVerifyForm();
             } catch (err) {
-                errorEl.textContent = err.message;
-                errorEl.classList.remove("hidden");
+                showAuthError(err.message);
             }
         });
         
-        document.getElementById("verify-form").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const errorEl = document.getElementById("verify-error");
-            errorEl.classList.add("hidden");
+        // Verify
+        document.getElementById("verify-btn").addEventListener("click", async () => {
+            hideAuthError();
             try {
                 await api("/api/auth/verify", {
                     method: "POST",
@@ -356,24 +1119,68 @@
                 });
                 checkAuth();
             } catch (err) {
-                errorEl.textContent = err.message;
-                errorEl.classList.remove("hidden");
+                showAuthError(err.message);
             }
         });
         
+        document.getElementById("back-to-register").addEventListener("click", (e) => {
+            e.preventDefault();
+            document.getElementById("auth-tabs-container").classList.remove("hidden");
+            document.querySelectorAll(".auth-tab")[1].click();
+        });
+        
+        // Logout
         document.getElementById("logout-btn").addEventListener("click", async () => {
             await api("/api/auth/logout", { method: "POST" });
             currentUser = null;
-            showScreen("login");
+            authScreen.classList.remove("hidden");
+            mainApp.classList.add("hidden");
         });
         
-        document.getElementById("show-register").addEventListener("click", (e) => { e.preventDefault(); showScreen("register"); });
-        document.getElementById("show-login").addEventListener("click", (e) => { e.preventDefault(); showScreen("login"); });
-        document.getElementById("back-to-register").addEventListener("click", (e) => { e.preventDefault(); showScreen("register"); });
+        // Main tabs
+        document.querySelectorAll(".tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+                tab.classList.add("active");
+                document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+                if (tab.dataset.tab === "notes") loadNotes();
+            });
+        });
         
+        // Status badge
+        function setStatus(status, text) {
+            const badge = document.getElementById("status-badge");
+            badge.className = "status-badge " + status;
+            document.getElementById("status-text").textContent = text;
+        }
+        
+        // Workflow
+        function setWorkflowStep(step) {
+            document.querySelectorAll(".workflow-step").forEach(s => {
+                s.classList.remove("active", "done");
+                const steps = ["dictate", "detect", "process", "copy"];
+                const currentIdx = steps.indexOf(step);
+                const thisIdx = steps.indexOf(s.dataset.step);
+                if (thisIdx < currentIdx) s.classList.add("done");
+                if (thisIdx === currentIdx) s.classList.add("active");
+            });
+        }
+        
+        // Word count
+        document.getElementById("dictation").addEventListener("input", () => {
+            const text = document.getElementById("dictation").value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            document.getElementById("word-count").textContent = words + " word" + (words !== 1 ? "s" : "");
+            document.getElementById("generate-btn").disabled = words < 5;
+            if (words >= 5) setWorkflowStep("detect");
+            else setWorkflowStep("dictate");
+        });
+        
+        // Speech recognition
         function initSpeechRecognition() {
             if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
-                document.getElementById("mic-status").textContent = "Speech recognition not supported";
+                document.getElementById("mic-hint").textContent = "Speech not supported";
                 document.getElementById("mic-btn").disabled = true;
                 return;
             }
@@ -382,20 +1189,25 @@
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = "en-US";
-            let finalTranscript = document.getElementById("dictation").value;
+            let finalTranscript = "";
+            
+            recognition.onstart = () => {
+                finalTranscript = document.getElementById("dictation").value;
+            };
             
             recognition.onresult = (event) => {
-                let interimTranscript = "";
+                let interim = "";
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
                         finalTranscript += event.results[i][0].transcript + " ";
                     } else {
-                        interimTranscript += event.results[i][0].transcript;
+                        interim += event.results[i][0].transcript;
                     }
                 }
-                document.getElementById("dictation").value = finalTranscript + interimTranscript;
+                document.getElementById("dictation").value = finalTranscript + interim;
+                document.getElementById("dictation").dispatchEvent(new Event("input"));
             };
-            recognition.onerror = (event) => { console.error("Speech error:", event.error); stopRecording(); };
+            recognition.onerror = () => stopRecording();
             recognition.onend = () => { if (isRecording) recognition.start(); };
         }
         
@@ -404,72 +1216,169 @@
             isRecording = true;
             recognition.start();
             document.getElementById("mic-btn").classList.add("recording");
-            document.getElementById("mic-status").textContent = "Listening... tap to stop";
+            document.getElementById("dictation").classList.add("listening");
+            document.getElementById("mic-hint").textContent = "Tap to stop";
+            document.getElementById("wave-bars").classList.add("active");
+            setStatus("listening", "Listening");
         }
         
         function stopRecording() {
             isRecording = false;
             if (recognition) recognition.stop();
             document.getElementById("mic-btn").classList.remove("recording");
-            document.getElementById("mic-status").textContent = "Tap to start dictation";
+            document.getElementById("dictation").classList.remove("listening");
+            document.getElementById("mic-hint").textContent = "Tap to speak";
+            document.getElementById("wave-bars").classList.remove("active");
+            setStatus("", "Ready");
         }
         
         document.getElementById("mic-btn").addEventListener("click", () => {
             if (isRecording) stopRecording(); else startRecording();
         });
         
-        document.getElementById("extract-btn").addEventListener("click", async () => {
-            const dictation = document.getElementById("dictation").value.trim();
-            if (!dictation) return;
-            const btn = document.getElementById("extract-btn");
-            btn.disabled = true;
-            btn.innerHTML = "<span class=\"spinner\"></span>";
-            try {
-                const data = await api("/api/generate/extract", { method: "POST", body: JSON.stringify({ dictation }) });
-                if (data.gender) document.getElementById("demo-gender").value = data.gender;
-                if (data.age) document.getElementById("demo-age").value = data.age;
-                if (data.visitType) document.getElementById("demo-visit").value = data.visitType;
-                if (data.specialty) document.getElementById("demo-specialty").value = data.specialty;
-                if (data.chiefComplaint) document.getElementById("demo-complaint").value = data.chiefComplaint;
-                document.getElementById("generate-btn").disabled = false;
-            } catch (err) { alert("Error: " + err.message); }
-            finally { btn.disabled = false; btn.textContent = "Extract Demographics"; }
+        // Sample dictation
+        document.getElementById("sample-btn").addEventListener("click", () => {
+            document.getElementById("dictation").value = "This is a 45-year-old male presenting with chest pain for the past 3 hours. Patient describes the pain as pressure-like, radiating to the left arm. Associated symptoms include shortness of breath and diaphoresis. No prior history of cardiac disease. Currently takes lisinopril for hypertension. Vital signs: BP 150/90, HR 88, RR 18, O2 sat 97% on room air. Physical exam reveals regular heart rhythm, no murmurs, lungs clear bilaterally. EKG shows ST elevation in leads V1-V4. Assessment: Acute STEMI. Plan: Activate cath lab, aspirin 325mg, heparin drip, cardiology consult.";
+            document.getElementById("dictation").dispatchEvent(new Event("input"));
         });
         
+        // Clear all
+        document.getElementById("clear-btn").addEventListener("click", () => {
+            document.getElementById("dictation").value = "";
+            document.getElementById("dictation").dispatchEvent(new Event("input"));
+            document.getElementById("demographics-bar").classList.remove("visible");
+            document.getElementById("soap-card").classList.remove("visible");
+            document.getElementById("soap-ready-badge").classList.add("hidden");
+            demographics = { gender: null, age: null, visitType: null, specialty: null, chiefComplaint: null, confidence: 0 };
+            setWorkflowStep("dictate");
+            setStatus("", "Ready");
+        });
+        
+        // Generate SOAP
         document.getElementById("generate-btn").addEventListener("click", async () => {
             const dictation = document.getElementById("dictation").value.trim();
-            if (!dictation) return;
+            if (\!dictation) return;
+            
             const btn = document.getElementById("generate-btn");
             btn.disabled = true;
             btn.innerHTML = "<span class=\"spinner\"></span> Generating...";
+            setStatus("processing", "Processing");
+            setWorkflowStep("detect");
+            
             try {
-                const data = await api("/api/generate/soap", {
+                // Extract demographics
+                const extractData = await api("/api/generate/extract", {
+                    method: "POST",
+                    body: JSON.stringify({ dictation })
+                });
+                demographics = extractData;
+                renderDemographics();
+                setWorkflowStep("process");
+                
+                // Generate SOAP
+                const soapData = await api("/api/generate/soap", {
                     method: "POST",
                     body: JSON.stringify({
                         dictation,
-                        gender: document.getElementById("demo-gender").value || null,
-                        age: document.getElementById("demo-age").value || null,
-                        visitType: document.getElementById("demo-visit").value || null,
-                        specialty: document.getElementById("demo-specialty").value || null,
-                        chiefComplaint: document.getElementById("demo-complaint").value || null
+                        gender: demographics.gender,
+                        age: demographics.age,
+                        visitType: demographics.visitType,
+                        specialty: demographics.specialty,
+                        chiefComplaint: demographics.chiefComplaint
                     })
                 });
-                document.getElementById("soap-output").innerHTML = formatSOAP(data.soap_note);
-                document.getElementById("soap-card").style.display = "block";
-            } catch (err) { alert("Error: " + err.message); }
-            finally { btn.disabled = false; btn.textContent = "Generate SOAP"; }
+                
+                renderSOAP(soapData.soap_note);
+                setWorkflowStep("copy");
+                setStatus("done", "Done");
+                document.getElementById("soap-ready-badge").classList.remove("hidden");
+            } catch (err) {
+                alert("Error: " + err.message);
+                setStatus("", "Ready");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Generate SOAP Note";
+            }
         });
         
-        function formatSOAP(text) {
-            return text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/^- /gm, "• ");
+        function renderDemographics() {
+            const bar = document.getElementById("demographics-bar");
+            const pills = document.getElementById("demographics-pills");
+            pills.innerHTML = "";
+            
+            const fields = [
+                { key: "gender", label: "Gender", type: "select", opts: ["", "Male", "Female"] },
+                { key: "age", label: "Age", type: "text" },
+                { key: "visitType", label: "Visit", type: "select", opts: ["", "New Patient", "Follow-up", "Annual Exam", "Urgent", "Consultation"] },
+                { key: "specialty", label: "Specialty", type: "text" },
+                { key: "chiefComplaint", label: "Complaint", type: "text" }
+            ];
+            
+            fields.forEach(f => {
+                if (\!demographics[f.key]) return;
+                const pill = document.createElement("div");
+                pill.className = "demo-pill";
+                const conf = demographics.confidence || 0.5;
+                const dotClass = conf > 0.7 ? "" : conf > 0.4 ? "medium" : "low";
+                
+                let inner = "<span class=\"demo-pill-label\">" + f.label + "</span>";
+                if (f.type === "select") {
+                    inner += "<select>" + f.opts.map(o => "<option value=\"" + o + "\"" + (o === demographics[f.key] ? " selected" : "") + ">" + (o || "--") + "</option>").join("") + "</select>";
+                } else {
+                    inner += "<input type=\"text\" value=\"" + (demographics[f.key] || "") + "\">";
+                }
+                inner += "<span class=\"demo-pill-dot " + dotClass + "\"></span>";
+                pill.innerHTML = inner;
+                
+                const input = pill.querySelector("input, select");
+                input.addEventListener("change", (e) => { demographics[f.key] = e.target.value; });
+                pills.appendChild(pill);
+            });
+            bar.classList.add("visible");
+        }
+        
+        function renderSOAP(text) {
+            const card = document.getElementById("soap-card");
+            const output = document.getElementById("soap-output");
+            const meta = document.getElementById("soap-meta");
+            
+            meta.innerHTML = "";
+            if (demographics.age || demographics.gender) {
+                const tag = document.createElement("span");
+                tag.className = "soap-meta-tag";
+                tag.textContent = (demographics.age || "") + (demographics.gender ? (demographics.age ? " " : "") + demographics.gender.charAt(0) : "");
+                meta.appendChild(tag);
+            }
+            if (demographics.visitType) {
+                const tag = document.createElement("span");
+                tag.className = "soap-meta-tag";
+                tag.textContent = demographics.visitType;
+                meta.appendChild(tag);
+            }
+            if (demographics.specialty) {
+                const tag = document.createElement("span");
+                tag.className = "soap-meta-tag";
+                tag.textContent = demographics.specialty;
+                meta.appendChild(tag);
+            }
+            
+            let html = text
+                .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN)\*\*/gi, "<span class=\"section-header\">$1</span>")
+                .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+                .replace(/\[VERIFY\]/gi, "<span class=\"verify-tag\">[VERIFY]</span>")
+                .replace(/\[MISSING\]/gi, "<span class=\"verify-tag\">[MISSING]</span>")
+                .replace(/^- /gm, "• ");
+            output.innerHTML = html;
+            card.classList.add("visible");
         }
         
         document.getElementById("copy-btn").addEventListener("click", () => {
             const text = document.getElementById("soap-output").innerText;
             navigator.clipboard.writeText(text).then(() => {
                 const btn = document.getElementById("copy-btn");
-                btn.textContent = "Copied!";
-                setTimeout(() => btn.textContent = "Copy", 2000);
+                btn.classList.add("copied");
+                btn.textContent = "Copied\!";
+                setTimeout(() => { btn.classList.remove("copied"); btn.textContent = "Copy to Clipboard"; }, 2500);
             });
         });
         
@@ -482,119 +1391,115 @@
                     method: "POST",
                     body: JSON.stringify({
                         label: document.getElementById("note-label").value || null,
-                        patient_age: document.getElementById("demo-age").value || null,
-                        patient_gender: document.getElementById("demo-gender").value || null,
-                        visit_type: document.getElementById("demo-visit").value || null,
-                        specialty: document.getElementById("demo-specialty").value || null,
-                        chief_complaint: document.getElementById("demo-complaint").value || null,
+                        patient_age: demographics.age || null,
+                        patient_gender: demographics.gender || null,
+                        visit_type: demographics.visitType || null,
+                        specialty: demographics.specialty || null,
+                        chief_complaint: demographics.chiefComplaint || null,
                         raw_dictation: document.getElementById("dictation").value,
                         soap_note: document.getElementById("soap-output").innerText
                     })
                 });
-                btn.textContent = "Saved!";
-                setTimeout(() => {
-                    btn.textContent = "Save";
-                    document.getElementById("dictation").value = "";
-                    document.getElementById("note-label").value = "";
-                    document.getElementById("demo-gender").value = "";
-                    document.getElementById("demo-age").value = "";
-                    document.getElementById("demo-visit").value = "";
-                    document.getElementById("demo-specialty").value = "";
-                    document.getElementById("demo-complaint").value = "";
-                    document.getElementById("soap-output").innerHTML = "";
-                    document.getElementById("soap-card").style.display = "none";
-                    document.getElementById("generate-btn").disabled = true;
-                }, 1500);
-            } catch (err) { alert("Error: " + err.message); btn.textContent = "Save"; }
-            finally { btn.disabled = false; }
+                btn.textContent = "Saved\!";
+                setTimeout(() => { document.getElementById("clear-btn").click(); btn.textContent = "Save Note"; btn.disabled = false; }, 1500);
+            } catch (err) {
+                alert("Error: " + err.message);
+                btn.textContent = "Save Note";
+                btn.disabled = false;
+            }
         });
         
         async function loadNotes() {
-            const loadingEl = document.getElementById("notes-loading");
-            const emptyEl = document.getElementById("notes-empty");
-            const listEl = document.getElementById("notes-list");
-            loadingEl.classList.remove("hidden");
-            emptyEl.classList.add("hidden");
-            listEl.innerHTML = "";
+            const loading = document.getElementById("notes-loading");
+            const empty = document.getElementById("notes-empty");
+            const list = document.getElementById("notes-list");
+            loading.classList.remove("hidden");
+            empty.classList.add("hidden");
+            list.innerHTML = "";
+            
             try {
                 notes = await api("/api/notes");
-                loadingEl.classList.add("hidden");
-                if (notes.length === 0) { emptyEl.classList.remove("hidden"); return; }
+                loading.classList.add("hidden");
+                if (notes.length === 0) { empty.classList.remove("hidden"); return; }
                 renderNotes();
             } catch (err) {
-                loadingEl.classList.add("hidden");
-                listEl.innerHTML = "<p class=\"text-center\" style=\"color:var(--danger)\">Error loading notes</p>";
+                loading.classList.add("hidden");
+                list.innerHTML = "<p style=\"text-align:center;color:var(--red)\">Error loading notes</p>";
             }
         }
         
         function renderNotes() {
-            const listEl = document.getElementById("notes-list");
-            listEl.innerHTML = "";
+            const list = document.getElementById("notes-list");
+            list.innerHTML = "";
             const groups = {};
+            const today = new Date().toDateString();
+            const yesterday = new Date(Date.now() - 86400000).toDateString();
+            
             notes.forEach(note => {
-                const date = new Date(note.created_at).toLocaleDateString();
-                if (!groups[date]) groups[date] = [];
-                groups[date].push(note);
+                const d = new Date(note.created_at);
+                const ds = d.toDateString();
+                let label = ds === today ? "Today" : ds === yesterday ? "Yesterday" : d.toLocaleDateString();
+                if (!groups[label]) groups[label] = [];
+                groups[label].push(note);
             });
+            
             Object.entries(groups).forEach(([date, dateNotes]) => {
-                const groupEl = document.createElement("div");
-                groupEl.className = "date-group";
-                groupEl.innerHTML = "<div class=\"date-group-header\">" + date + "</div>";
+                const group = document.createElement("div");
+                group.className = "date-group";
+                group.innerHTML = "<div class=\"date-group-header\">" + date + "</div>";
+                
                 dateNotes.forEach(note => {
-                    const noteEl = document.createElement("div");
-                    noteEl.className = "note-card" + (expandedNoteId === note.id ? " expanded" : "");
-                    noteEl.innerHTML = "<div class=\"note-header\"><div><div class=\"note-title\">" + (note.label || "Untitled Note") + "</div><div class=\"note-date\">" + new Date(note.created_at).toLocaleTimeString() + "</div></div></div>" + (note.chief_complaint ? "<div class=\"note-complaint\">" + note.chief_complaint + "</div>" : "") + "<div class=\"note-content\" style=\"display:" + (expandedNoteId === note.id ? "block" : "none") + "\"></div>";
-                    noteEl.addEventListener("click", () => toggleNote(note.id, noteEl));
-                    groupEl.appendChild(noteEl);
+                    const card = document.createElement("div");
+                    card.className = "note-card" + (expandedNoteId === note.id ? " expanded" : "");
+                    card.innerHTML = "<div class=\"note-header\"><span class=\"note-time\">" + new Date(note.created_at).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}) + "</span><div class=\"note-pills\"></div></div><div class=\"note-title\">" + (note.label || "Untitled Note") + "</div>" + (note.chief_complaint ? "<div class=\"note-complaint\">" + note.chief_complaint + "</div>" : "") + "<div class=\"note-content\"><div class=\"note-soap\"></div><div class=\"note-actions\"><button class=\"btn btn-secondary btn-sm btn-copy\">Copy</button><button class=\"btn btn-danger btn-sm\">Delete</button></div></div>";
+                    card.addEventListener("click", (e) => { if (!e.target.closest("button")) toggleNote(note.id, card); });
+                    group.appendChild(card);
                 });
-                listEl.appendChild(groupEl);
+                list.appendChild(group);
             });
         }
         
         async function toggleNote(id, el) {
-            const contentEl = el.querySelector(".note-content");
             if (expandedNoteId === id) {
                 expandedNoteId = null;
-                contentEl.style.display = "none";
                 el.classList.remove("expanded");
                 return;
             }
-            document.querySelectorAll(".note-card.expanded").forEach(card => {
-                card.classList.remove("expanded");
-                card.querySelector(".note-content").style.display = "none";
-            });
+            document.querySelectorAll(".note-card.expanded").forEach(c => c.classList.remove("expanded"));
             expandedNoteId = id;
             el.classList.add("expanded");
-            contentEl.style.display = "block";
-            contentEl.innerHTML = "<div class=\"spinner\"></div>";
+            const soapEl = el.querySelector(".note-soap");
+            soapEl.innerHTML = "<div class=\"spinner\"></div>";
+            
             try {
                 const note = await api("/api/notes/" + id);
-                contentEl.innerHTML = "<div class=\"soap-output\" style=\"margin-bottom:12px\">" + formatSOAP(note.soap_note || "No content") + "</div><div class=\"note-actions\"><button class=\"btn btn-secondary btn-sm\" onclick=\"copyNote(" + id + ", event)\">Copy</button><button class=\"btn btn-danger btn-sm\" onclick=\"deleteNote(" + id + ", event)\">Delete</button></div>";
+                let html = (note.soap_note || "No content")
+                    .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN)\*\*/gi, "<span class=\"section-header\">$1</span>")
+                    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+                    .replace(/^- /gm, "• ");
+                soapEl.innerHTML = "<div class=\"soap-output\">" + html + "</div>";
+                
+                el.querySelector(".btn-copy").onclick = (e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(note.soap_note);
+                    e.target.textContent = "Copied!";
+                    setTimeout(() => e.target.textContent = "Copy", 2000);
+                };
+                el.querySelector(".btn-danger").onclick = async (e) => {
+                    e.stopPropagation();
+                    if (!confirm("Delete this note?")) return;
+                    await api("/api/notes/" + id, { method: "DELETE" });
+                    notes = notes.filter(n => n.id !== id);
+                    expandedNoteId = null;
+                    renderNotes();
+                    if (notes.length === 0) document.getElementById("notes-empty").classList.remove("hidden");
+                };
             } catch (err) {
-                contentEl.innerHTML = "<p style=\"color:var(--danger)\">Error loading note</p>";
+                soapEl.innerHTML = "<p style=\"color:var(--red)\">Error loading note</p>";
             }
         }
         
-        async function copyNote(id, event) {
-            event.stopPropagation();
-            const note = await api("/api/notes/" + id);
-            navigator.clipboard.writeText(note.soap_note);
-            event.target.textContent = "Copied!";
-            setTimeout(() => event.target.textContent = "Copy", 2000);
-        }
-        
-        async function deleteNote(id, event) {
-            event.stopPropagation();
-            if (!confirm("Delete this note?")) return;
-            try {
-                await api("/api/notes/" + id, { method: "DELETE" });
-                notes = notes.filter(n => n.id !== id);
-                expandedNoteId = null;
-                renderNotes();
-                if (notes.length === 0) document.getElementById("notes-empty").classList.remove("hidden");
-            } catch (err) { alert("Error: " + err.message); }
-        }
-        
+        // Init
         initSpeechRecognition();
         checkAuth();
     </script>
