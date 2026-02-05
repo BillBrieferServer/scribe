@@ -482,18 +482,21 @@
             
             // Date and Time part
             if (encTime) {
-                var d = new Date(encTime);
-                var month = d.getMonth() + 1;
-                var day = d.getDate();
-                month = month < 10 ? '0' + month : month;
-                day = day < 10 ? '0' + day : day;
-                var hours = d.getHours();
-                var mins = d.getMinutes();
-                var ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12;
-                hours = hours ? hours : 12;
-                mins = mins < 10 ? '0' + mins : mins;
-                var year = String(d.getFullYear()).slice(-2); parts.push(month + '/' + day + '/' + year + ' · ' + hours + ':' + mins + ' ' + ampm);
+                var d = encTime instanceof Date ? encTime : new Date(encTime);
+                if (d && !isNaN(d.getTime())) {
+                    var month = d.getMonth() + 1;
+                    var day = d.getDate();
+                    month = month < 10 ? '0' + month : month;
+                    day = day < 10 ? '0' + day : day;
+                    var hours = d.getHours();
+                    var mins = d.getMinutes();
+                    var ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12;
+                    mins = mins < 10 ? '0' + mins : mins;
+                    var year = String(d.getFullYear()).slice(-2);
+                    parts.push(month + '/' + day + '/' + year + ' · ' + hours + ':' + mins + ' ' + ampm);
+                }
             }
             
             // Demographics part
