@@ -15,11 +15,11 @@ async def create_note(note: NoteCreate, request: Request):
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO notes (user_id, label, patient_age, patient_gender, visit_type, 
-                             specialty, chief_complaint, raw_dictation, soap_note)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             specialty, chief_complaint, raw_dictation, soap_note, encounter_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (user["id"], note.label, note.patient_age, note.patient_gender, 
               note.visit_type, note.specialty, note.chief_complaint, 
-              note.raw_dictation, note.soap_note))
+              note.raw_dictation, note.soap_note, note.encounter_time))
         conn.commit()
         note_id = cursor.lastrowid
         
@@ -36,6 +36,7 @@ async def create_note(note: NoteCreate, request: Request):
         chief_complaint=row["chief_complaint"],
         raw_dictation=row["raw_dictation"],
         soap_note=row["soap_note"],
+        encounter_time=row["encounter_time"],
         created_at=row["created_at"]
     )
 
@@ -46,7 +47,7 @@ async def list_notes(request: Request):
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT id, label, chief_complaint, created_at 
+            SELECT id, label, patient_age, patient_gender, chief_complaint, encounter_time, created_at 
             FROM notes WHERE user_id = ?
             ORDER BY created_at DESC
         ''', (user["id"],))
@@ -55,7 +56,10 @@ async def list_notes(request: Request):
     return [NoteListItem(
         id=row["id"],
         label=row["label"],
+        patient_age=row["patient_age"],
+        patient_gender=row["patient_gender"],
         chief_complaint=row["chief_complaint"],
+        encounter_time=row["encounter_time"],
         created_at=row["created_at"]
     ) for row in rows]
 
@@ -81,6 +85,7 @@ async def get_note(note_id: int, request: Request):
         chief_complaint=row["chief_complaint"],
         raw_dictation=row["raw_dictation"],
         soap_note=row["soap_note"],
+        encounter_time=row["encounter_time"],
         created_at=row["created_at"]
     )
 

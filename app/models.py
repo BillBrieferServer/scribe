@@ -32,6 +32,7 @@ class NoteCreate(BaseModel):
     chief_complaint: Optional[str] = None
     raw_dictation: Optional[str] = None
     soap_note: Optional[str] = None
+    encounter_time: Optional[str] = None
 
 class NoteResponse(BaseModel):
     id: int
@@ -43,12 +44,16 @@ class NoteResponse(BaseModel):
     chief_complaint: Optional[str]
     raw_dictation: Optional[str]
     soap_note: Optional[str]
+    encounter_time: Optional[str]
     created_at: str
 
 class NoteListItem(BaseModel):
     id: int
     label: Optional[str]
+    patient_age: Optional[str]
+    patient_gender: Optional[str]
     chief_complaint: Optional[str]
+    encounter_time: Optional[str]
     created_at: str
 
 # Generate models

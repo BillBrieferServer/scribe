@@ -54,10 +54,17 @@ def init_db():
                 chief_complaint TEXT,
                 raw_dictation TEXT,
                 soap_note TEXT,
+                encounter_time TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         ''')
+        
+        # Add encounter_time column if it doesn't exist (migration for existing tables)
+        try:
+            cursor.execute('ALTER TABLE notes ADD COLUMN encounter_time TEXT')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
         
         # Create indexes
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash)')

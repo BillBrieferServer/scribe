@@ -145,7 +145,9 @@
         .soap-empty-text { font-family: 'DM Mono', monospace; font-size: 0.9rem; }
         .soap-full { display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
         .soap-full.visible { display: block; }
-        .soap-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--bg-input); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+        .soap-title-bar { padding: 16px 18px; background: var(--bg-input); border-bottom: 1px solid var(--border); }
+        .soap-title { font-family: 'DM Mono', monospace; font-size: 1.1rem; color: var(--text-primary); font-weight: 500; }
+        .soap-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: var(--bg-card); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
         .soap-toolbar-left { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         .soap-meta-tag { font-family: 'DM Mono', monospace; font-size: 0.75rem; padding: 5px 10px; background: var(--bg-hover); border-radius: 5px; color: var(--text-secondary); }
         .soap-saved { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--teal); display: none; align-items: center; gap: 4px; }
@@ -165,10 +167,9 @@
         .note-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; }
         .note-card:hover { border-color: var(--border-focus); }
         .note-card.expanded { border-color: var(--teal); }
-        .note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-        .note-title { font-weight: 500; }
-        .note-time { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--text-muted); }
-        .note-meta { font-size: 0.85rem; color: var(--text-secondary); }
+        .note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+        .note-title { font-family: 'DM Mono', monospace; font-size: 0.95rem; font-weight: 500; }
+        .note-label { font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-top: 4px; }
         .note-content { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
         .note-card.expanded .note-content { display: block; }
         .note-actions { margin-top: 14px; display: flex; gap: 8px; }
@@ -319,6 +320,9 @@
                         <div class="soap-empty-text">Generate a note to see it here</div>
                     </div>
                     <div class="soap-full" id="soap-full">
+                        <div class="soap-title-bar">
+                            <div class="soap-title" id="soap-title"></div>
+                        </div>
                         <div class="soap-toolbar">
                             <div class="soap-toolbar-left">
                                 <span class="soap-meta-tag" id="soap-meta-demo"></span>
@@ -332,7 +336,7 @@
                             <span class="copy-hint">Paste directly into your EHR</span>
                         </div>
                         <div class="soap-body">
-                            <input type="text" id="note-label" class="soap-label-input" placeholder="Add a label to find this later...">
+                            <input type="text" id="note-label" class="soap-label-input" placeholder="Add a personal label (optional)...">
                             <div class="soap-output" id="soap-output"></div>
                         </div>
                         <div class="soap-footer">
@@ -356,6 +360,7 @@
         var demographics = {};
         var soapReady = false;
         var currentSubTab = 'dictation';
+        var encounterTime = null;
         
         function api(endpoint, options) {
             options = options || {};
@@ -421,12 +426,62 @@
                 switchSubTab(tab.dataset.subtab);
             });
         });
+        // Capture encounter time on first interaction
+        function captureEncounterTime() {
+            if (!encounterTime) {
+                encounterTime = new Date();
+            }
+        }
+        
+        // Generate note title from encounter time and demographics
+        function generateNoteTitle(encTime, age, gender, chiefComplaint) {
+            var parts = [];
+            
+            // Time part
+            if (encTime) {
+                var d = new Date(encTime);
+                var hours = d.getHours();
+                var mins = d.getMinutes();
+                var ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                mins = mins < 10 ? '0' + mins : mins;
+                parts.push(hours + ':' + mins + ' ' + ampm);
+            }
+            
+            // Demographics part
+            var demo = '';
+            if (age) demo += age;
+            if (gender) {
+                var g = gender.toLowerCase();
+                if (g === 'male' || g === 'm') demo += 'M';
+                else if (g === 'female' || g === 'f') demo += 'F';
+                else if (g === 'nonbinary' || g === 'nb') demo += 'NB';
+                else demo += gender.charAt(0).toUpperCase();
+            }
+            if (demo) parts.push(demo);
+            
+            // Chief complaint
+            if (chiefComplaint) {
+                parts.push(chiefComplaint);
+            }
+            
+            if (parts.length === 0) return 'Untitled Note';
+            if (parts.length === 1 && encTime) return parts[0] + ' · Untitled Note';
+            return parts.join(' · ');
+        }
+        
         function updateWordCount() {
             var text = document.getElementById('dictation').value.trim();
             var words = text ? text.split(/\s+/).length : 0;
             document.getElementById('word-count').textContent = words + ' word' + (words !== 1 ? 's' : '');
         }
-        document.getElementById('dictation').addEventListener('input', updateWordCount);
+        
+        // Track first keystroke in textarea
+        document.getElementById('dictation').addEventListener('input', function() {
+            captureEncounterTime();
+            updateWordCount();
+        });
         
         document.querySelectorAll('.auth-tab').forEach(function(tab) {
             tab.addEventListener('click', function() {
@@ -544,6 +599,7 @@
         
         function startRecording() {
             if (!recognition) return;
+            captureEncounterTime();
             isRecording = true;
             recognition.start();
             document.getElementById('mic-btn').classList.add('recording');
@@ -574,6 +630,7 @@
         });
         
         document.getElementById('sample-btn').addEventListener('click', function() {
+            captureEncounterTime();
             document.getElementById('dictation').value = '29 year old female presenting to clinic with sore throat for 3 days. Reports pain with swallowing, mild fever, and fatigue. No cough or runny nose. Past medical history unremarkable. On exam, temperature 100.4F, pharynx erythematous with tonsillar exudates, tender anterior cervical lymphadenopathy. Rapid strep test positive. Assessment: Streptococcal pharyngitis. Plan: Amoxicillin 500mg TID for 10 days, rest, fluids, follow up if not improving in 48-72 hours.';
             updateWordCount();
             setWorkflowStep('dictate');
@@ -588,8 +645,10 @@
             document.getElementById('note-label').value = '';
             document.getElementById('soap-saved').style.display = 'none';
             document.getElementById('soap-ready-badge').classList.remove('visible');
+            document.getElementById('soap-title').textContent = '';
             demographics = {};
             soapReady = false;
+            encounterTime = null;
             updateWordCount();
             setWorkflowStep('dictate');
             setStatus('', 'Ready');
@@ -659,6 +718,10 @@
                     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
                 document.getElementById('soap-output').innerHTML = html;
                 
+                // Generate and display title
+                var title = generateNoteTitle(encounterTime, demographics.age, demographics.gender, demographics.chiefComplaint);
+                document.getElementById('soap-title').textContent = title;
+                
                 var demoTag = document.getElementById('soap-meta-demo');
                 var visitTag = document.getElementById('soap-meta-visit');
                 var complaintTag = document.getElementById('soap-meta-complaint');
@@ -700,7 +763,8 @@
                     specialty: demographics.specialty || null,
                     chief_complaint: demographics.chiefComplaint || null,
                     raw_dictation: document.getElementById('dictation').value,
-                    soap_note: document.getElementById('soap-output').innerText
+                    soap_note: document.getElementById('soap-output').innerText,
+                    encounter_time: encounterTime ? encounterTime.toISOString() : null
                 })
             }).then(function() {
                 document.getElementById('soap-saved').style.display = 'flex';
@@ -736,7 +800,7 @@
                 var yesterday = new Date(Date.now() - 86400000).toDateString();
                 
                 notes.forEach(function(note) {
-                    var d = new Date(note.created_at);
+                    var d = new Date(note.encounter_time || note.created_at);
                     var ds = d.toDateString();
                     var label = ds === today ? 'Today' : ds === yesterday ? 'Yesterday' : d.toLocaleDateString();
                     if (!groups[label]) groups[label] = [];
@@ -753,9 +817,11 @@
                         var card = document.createElement('div');
                         card.className = 'note-card';
                         card.dataset.id = note.id;
-                        card.innerHTML = '<div class="note-header"><span class="note-title">' + (note.label || 'Untitled') + '</span><span class="note-time">' + new Date(note.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + '</span></div>' +
-                            (note.chief_complaint ? '<div class="note-meta">' + note.chief_complaint + '</div>' : '') +
-                            '<div class="note-content"></div>';
+                        
+                        var title = generateNoteTitle(note.encounter_time || note.created_at, note.patient_age, note.patient_gender, note.chief_complaint);
+                        var labelHtml = note.label ? '<div class="note-label">' + note.label + '</div>' : '';
+                        
+                        card.innerHTML = '<div class="note-header"><span class="note-title">' + title + '</span></div>' + labelHtml + '<div class="note-content"></div>';
                         group.appendChild(card);
                     });
                     list.appendChild(group);
@@ -781,7 +847,9 @@
             content.innerHTML = '<div class="spinner"></div>';
             
             api('/api/notes/' + id).then(function(note) {
-                content.innerHTML = '<div class="soap-output">' + (note.soap_note || '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') + '</div>' +
+                var title = generateNoteTitle(note.encounter_time || note.created_at, note.patient_age, note.patient_gender, note.chief_complaint);
+                content.innerHTML = '<div class="soap-title" style="margin-bottom:12px;">' + title + '</div>' +
+                    '<div class="soap-output">' + (note.soap_note || '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') + '</div>' +
                     '<div class="note-actions">' +
                     '<button class="btn btn-secondary btn-sm" onclick="copyNoteText(this)">Copy</button>' +
                     '<button class="btn btn-danger btn-sm" onclick="deleteNote(' + id + ')">Delete</button>' +
