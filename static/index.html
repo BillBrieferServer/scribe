@@ -713,26 +713,42 @@
                 requestWakeLock();
             }
         });
-        var finalTranscript = '';
-        
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
             recognition.continuous = true;
             recognition.interimResults = true;
+            var lastProcessedIndex = 0;
+            var sessionId = 0;
+            
             recognition.onstart = function() {
-                finalTranscript = document.getElementById('dictation').value;
+                // Increment session to track restarts
+                sessionId++;
+                lastProcessedIndex = 0;
             };
             recognition.onresult = function(e) {
                 var interim = '';
-                for (var i = e.resultIndex; i < e.results.length; i++) {
-                    if (e.results[i].isFinal) {
-                        finalTranscript += e.results[i][0].transcript + ' ';
+                var textarea = document.getElementById('dictation');
+                
+                // Only process results we haven't seen yet
+                for (var i = lastProcessedIndex; i < e.results.length; i++) {
+                    var result = e.results[i];
+                    if (result.isFinal) {
+                        // Append final result to textarea (once)
+                        var text = result[0].transcript;
+                        if (text && text.trim()) {
+                            var currentVal = textarea.value;
+                            if (currentVal && !currentVal.endsWith(' ')) {
+                                currentVal += ' ';
+                            }
+                            textarea.value = currentVal + text.trim() + ' ';
+                        }
+                        lastProcessedIndex = i + 1;
                     } else {
-                        interim += e.results[i][0].transcript;
+                        interim += result[0].transcript;
                     }
                 }
-                document.getElementById('dictation').value = finalTranscript;
+                
                 updateWordCount();
                 var overlay = document.getElementById('interim-overlay');
                 if (interim) {
@@ -837,8 +853,49 @@
             }
         }
         
+        // Deduplication safety net for speech recognition artifacts
+        function deduplicateDictation(text) {
+            if (!text) return text;
+            
+            // Split into sentences (by period, question mark, or newline)
+            var sentences = text.split(/(?<=[.?!])\s+|
++/).filter(function(s) { return s.trim(); });
+            if (sentences.length < 2) return text;
+            
+            var cleaned = [];
+            var lastSentence = '';
+            var duplicateCount = 0;
+            
+            for (var i = 0; i < sentences.length; i++) {
+                var normalized = sentences[i].toLowerCase().trim().replace(/[^\w\s]/g, '');
+                var lastNormalized = lastSentence.toLowerCase().trim().replace(/[^\w\s]/g, '');
+                
+                // Check if this is a duplicate of the previous sentence
+                if (normalized === lastNormalized) {
+                    duplicateCount++;
+                    // Allow max 1 consecutive duplicate
+                    if (duplicateCount > 1) continue;
+                } else {
+                    duplicateCount = 0;
+                }
+                
+                cleaned.push(sentences[i]);
+                lastSentence = sentences[i];
+            }
+            
+            var result = cleaned.join(' ');
+            
+            // If we removed significant content, log it
+            if (result.length < text.length * 0.7) {
+                console.log('Removed duplicate text from speech recognition');
+            }
+            
+            return result;
+        }
+        
         document.getElementById('generate-btn').addEventListener('click', function() {
-            var dictation = document.getElementById('dictation').value.trim();
+            var rawDictation = document.getElementById('dictation').value.trim();
+            var dictation = deduplicateDictation(rawDictation);
             if (!dictation) return alert('Please enter some dictation first');
             
             var btn = this;
