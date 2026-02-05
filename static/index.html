@@ -769,7 +769,7 @@
             };
             
             recognition.onerror = function() { stopRecording(); };
-            recognition.onend = function() { if (isRecording) { recognition.start(); } };
+            recognition.onend = function() { if (isRecording) { stopRecording(); } };
         }
         
         function startRecording() {
