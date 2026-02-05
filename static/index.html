@@ -164,6 +164,8 @@
         .soap-subheader { font-weight: 600; color: var(--text-primary); }
         .soap-output strong { color: var(--text-primary); font-weight: 600; }
         .soap-disclaimer { font-size: 0.8rem; font-style: italic; color: var(--text-muted); display: block; margin-top: 8px; }
+        .soap-plan-item { display: block; padding-left: 1.5em; text-indent: -1.5em; }
+        .soap-plan-subitem { display: block; padding-left: 2.5em; text-indent: -1em; }
         .soap-footer { padding: 16px 18px; border-top: 1px solid var(--border); display: flex; justify-content: center; }
         .btn-new-patient { background: transparent; border: 2px solid var(--teal); color: var(--teal); padding: 14px 32px; font-size: 1rem; min-height: 48px; font-weight: 500; border-radius: 8px; }
         .btn-new-patient:hover { background: rgba(78, 205, 196, 0.1); border-color: var(--teal); color: var(--teal); box-shadow: 0 4px 15px var(--teal-glow); }
@@ -724,7 +726,10 @@
             }).then(function(data) {
                 var html = data.soap_note
                     .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?\*\*/gi, '<div class="soap-section-header">$1</div>').replace(/^(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?$/gim, '<div class="soap-section-header">$1</div>')
-                    .replace(/\(ICD-10 codes suggested[^)]*\)/g, '<span class="soap-disclaimer">$&</span>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                    .replace(/\(ICD-10 codes suggested[^)]*\)/g, '<span class="soap-disclaimer">$&</span>')
+                    .replace(/^(\d+\.\s+.*)$/gm, '<span class="soap-plan-item">$1</span>')
+                    .replace(/^(\s+-\s+.*)$/gm, '<span class="soap-plan-subitem">$1</span>')
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
                 document.getElementById('soap-output').innerHTML = html;
                 
                 // Generate and display title
@@ -858,7 +863,7 @@
             api('/api/notes/' + id).then(function(note) {
                 var title = generateNoteTitle(note.encounter_time || note.created_at, note.patient_age, note.patient_gender, note.chief_complaint);
                 content.innerHTML = '<div class="soap-title" style="margin-bottom:12px;">' + title + '</div>' +
-                    '<div class="soap-output">' + (note.soap_note || '').replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?\*\*/gi, '<div class="soap-section-header">$1</div>').replace(/^(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?$/gim, '<div class="soap-section-header">$1</div>').replace(/\(ICD-10 codes suggested[^)]*\)/g, '<span class="soap-disclaimer">$&</span>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') + '</div>' +
+                    '<div class="soap-output">' + (note.soap_note || '').replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?\*\*/gi, '<div class="soap-section-header">$1</div>').replace(/^(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?$/gim, '<div class="soap-section-header">$1</div>').replace(/\(ICD-10 codes suggested[^)]*\)/g, '<span class="soap-disclaimer">$&</span>').replace(/^(\d+\.\s+.*)$/gm, '<span class="soap-plan-item">$1</span>').replace(/^(\s+-\s+.*)$/gm, '<span class="soap-plan-subitem">$1</span>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') + '</div>' +
                     '<div class="note-actions">' +
                     '<button class="btn btn-secondary btn-sm" onclick="copyNoteText(this)">Copy</button>' +
                     '<button class="btn btn-danger btn-sm" onclick="deleteNote(' + id + ')">Delete</button>' +
