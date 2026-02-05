@@ -822,7 +822,21 @@
                 });
                 
                 var list = document.getElementById('notes-list');
-                Object.keys(groups).forEach(function(date) {
+                // Sort date groups: Today first, Yesterday second, then by date descending
+                var sortedDates = Object.keys(groups).sort(function(a, b) {
+                    if (a === 'Today') return -1;
+                    if (b === 'Today') return 1;
+                    if (a === 'Yesterday') return -1;
+                    if (b === 'Yesterday') return 1;
+                    return new Date(b) - new Date(a);
+                });
+                sortedDates.forEach(function(date) {
+                    // Sort notes within group by encounter_time/created_at descending
+                    groups[date].sort(function(a, b) {
+                        var ta = new Date(a.encounter_time || a.created_at);
+                        var tb = new Date(b.encounter_time || b.created_at);
+                        return tb - ta;
+                    });
                     var group = document.createElement('div');
                     group.className = 'date-group';
                     group.innerHTML = '<div class="date-group-header">' + date + '</div>';
