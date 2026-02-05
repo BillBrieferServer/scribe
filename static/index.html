@@ -718,7 +718,7 @@
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
-            recognition.continuous = true;
+            recognition.continuous = false;
             recognition.interimResults = true;
             
             recognition.onresult = function(e) {
@@ -766,7 +766,7 @@
             };
             
             recognition.onerror = function() { stopRecording(); };
-            recognition.onend = function() { if (isRecording) recognition.start(); };
+            recognition.onend = function() { if (isRecording) { stopRecording(); } };
         }
         
         function startRecording() {
