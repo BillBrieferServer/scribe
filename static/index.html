@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scribe - Voice to SOAP Notes</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #2563eb; --primary-dark: #1d4ed8; --danger: #dc2626;
+            --success: #16a34a; --gray-50: #f9fafb; --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-500: #6b7280;
+            --gray-700: #374151; --gray-900: #111827;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--gray-50); color: var(--gray-900); min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gray-200); margin-bottom: 16px; }
+        .header h1 { font-size: 1.5rem; color: var(--primary); }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .user-name { font-size: 0.875rem; color: var(--gray-500); }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-primary:disabled { background: var(--gray-300); cursor: not-allowed; }
+        .btn-secondary { background: var(--gray-200); color: var(--gray-700); }
+        .btn-secondary:hover { background: var(--gray-300); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-link { background: none; color: var(--primary); padding: 4px 8px; }
+        .btn-sm { padding: 6px 12px; font-size: 0.875rem; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--gray-700); }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 1rem; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; }
+        .card-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 16px; }
+        .auth-container { max-width: 400px; margin: 60px auto; padding: 0 16px; }
+        .auth-card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .auth-title { font-size: 1.5rem; text-align: center; margin-bottom: 24px; color: var(--primary); }
+        .auth-footer { text-align: center; margin-top: 20px; color: var(--gray-500); }
+        .auth-footer a { color: var(--primary); text-decoration: none; }
+        .tabs { display: flex; border-bottom: 2px solid var(--gray-200); margin-bottom: 20px; }
+        .tab { padding: 12px 24px; border: none; background: none; font-size: 1rem; color: var(--gray-500); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
+        .mic-container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .mic-btn { width: 100px; height: 100px; border-radius: 50%; border: none; background: var(--gray-200); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .mic-btn.recording { background: var(--danger); animation: pulse 1.5s infinite; }
+        .mic-btn svg { width: 40px; height: 40px; fill: var(--gray-700); }
+        .mic-btn.recording svg { fill: white; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .mic-status { margin-top: 12px; font-size: 0.875rem; color: var(--gray-500); }
+        .demographics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; padding: 16px; background: var(--gray-100); border-radius: 8px; margin: 16px 0; }
+        .demo-field { display: flex; flex-direction: column; }
+        .demo-field label { font-size: 0.75rem; color: var(--gray-500); margin-bottom: 4px; }
+        .demo-field input, .demo-field select { padding: 8px; border: 1px solid var(--gray-300); border-radius: 6px; font-size: 0.875rem; }
+        .soap-output { background: white; border: 1px solid var(--gray-200); border-radius: 8px; padding: 20px; white-space: pre-wrap; font-family: inherit; line-height: 1.6; min-height: 200px; }
+        .soap-output strong { color: var(--primary-dark); }
+        .notes-list { display: flex; flex-direction: column; gap: 12px; }
+        .note-card { background: white; border: 1px solid var(--gray-200); border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+        .note-card:hover { border-color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .note-card.expanded { border-color: var(--primary); }
+        .note-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .note-title { font-weight: 500; margin-bottom: 4px; }
+        .note-date { font-size: 0.75rem; color: var(--gray-500); }
+        .note-complaint { font-size: 0.875rem; color: var(--gray-500); margin-top: 4px; }
+        .note-content { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--gray-200); }
+        .note-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .message { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+        .message.error { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+        .message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .mb-4 { margin-bottom: 16px; }
+        .flex { display: flex; }
+        .gap-2 { gap: 8px; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .date-group { margin-bottom: 24px; }
+        .date-group-header { font-size: 0.875rem; color: var(--gray-500); margin-bottom: 12px; font-weight: 500; }
+        .empty-state { text-align: center; padding: 40px; color: var(--gray-500); }
+        .empty-state svg { width: 64px; height: 64px; fill: var(--gray-300); margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Auth: Login -->
+        <div id="login-screen" class="auth-container">
+            <div class="auth-card">
+                <h2 class="auth-title">Scribe</h2>
+                <div id="login-error" class="message error hidden"></div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">Sign In</button>
+                </form>
+                <p class="auth-footer">Dont have an account? <a href="#" id="show-register">Register</a></p>
+            </div>
+        </div>
+        
+        <!-- Auth: Register -->
+        <div id="register-screen" class="auth-container hidden">
+            <div class="auth-card">
+                <h2 class="auth-title">Create Account</h2>
+                <div id="register-error" class="message error hidden"></div>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-name">Full Name</label>
+                        <input type="text" id="register-name" required autocomplete="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" required minlength="8" autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">Register</button>
+                </form>
+                <p class="auth-footer">Already have an account? <a href="#" id="show-login">Sign In</a></p>
+            </div>
+        </div>
+        
+        <!-- Auth: Verify -->
+        <div id="verify-screen" class="auth-container hidden">
+            <div class="auth-card">
+                <h2 class="auth-title">Verify Email</h2>
+                <p class="text-center mb-4" style="color: var(--gray-500)">We sent a 6-digit code to <span id="verify-email-display"></span></p>
+                <div id="verify-error" class="message error hidden"></div>
+                <form id="verify-form">
+                    <div class="form-group">
+                        <label for="verify-code">Verification Code</label>
+                        <input type="text" id="verify-code" required maxlength="6" pattern="[0-9]{6}" style="text-align:center; font-size:1.5rem; letter-spacing:0.5rem" autocomplete="one-time-code">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">Verify</button>
+                </form>
+                <p class="auth-footer"><a href="#" id="back-to-register">Back to Register</a></p>
+            </div>
+        </div>
+        
+        <!-- Main App -->
+        <div id="main-app" class="hidden">
+            <div class="container">
+                <header class="header">
+                    <h1>Scribe</h1>
+                    <div class="header-right">
+                        <span class="user-name" id="user-name"></span>
+                        <button class="btn btn-link btn-sm" id="logout-btn">Logout</button>
+                    </div>
+                </header>
+                
+                <div class="tabs">
+                    <button class="tab active" data-tab="new">New Note</button>
+                    <button class="tab" data-tab="notes">My Notes</button>
+                </div>
+                
+                <!-- New Note Tab -->
+                <div id="tab-new" class="tab-content">
+                    <div class="card">
+                        <div class="mic-container">
+                            <button class="mic-btn" id="mic-btn" title="Click to start recording">
+                                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                            </button>
+                            <p class="mic-status" id="mic-status">Tap to start dictation</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dictation">Dictation</label>
+                            <textarea id="dictation" rows="6" placeholder="Speak or type your clinical notes here..."></textarea>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <button class="btn btn-secondary" id="extract-btn">Extract Demographics</button>
+                            <button class="btn btn-primary" id="generate-btn" disabled>Generate SOAP</button>
+                        </div>
+                    </div>
+                    
+                    <div class="demographics" id="demographics">
+                        <div class="demo-field">
+                            <label>Gender</label>
+                            <select id="demo-gender">
+                                <option value="">--</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="demo-field">
+                            <label>Age</label>
+                            <input type="text" id="demo-age" placeholder="e.g., 45">
+                        </div>
+                        <div class="demo-field">
+                            <label>Visit Type</label>
+                            <select id="demo-visit">
+                                <option value="">--</option>
+                                <option value="New Patient">New Patient</option>
+                                <option value="Follow-up">Follow-up</option>
+                                <option value="Annual Exam">Annual Exam</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="Consultation">Consultation</option>
+                            </select>
+                        </div>
+                        <div class="demo-field">
+                            <label>Specialty</label>
+                            <input type="text" id="demo-specialty" placeholder="e.g., Family Medicine">
+                        </div>
+                        <div class="demo-field" style="grid-column: span 2;">
+                            <label>Chief Complaint</label>
+                            <input type="text" id="demo-complaint" placeholder="e.g., chest pain">
+                        </div>
+                    </div>
+                    
+                    <div class="card" id="soap-card" style="display:none">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="card-title" style="margin:0">SOAP Note</h3>
+                            <div class="flex gap-2">
+                                <button class="btn btn-secondary btn-sm" id="copy-btn">Copy</button>
+                                <button class="btn btn-primary btn-sm" id="save-btn">Save</button>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px">
+                            <input type="text" id="note-label" placeholder="Note label (optional)">
+                        </div>
+                        <div class="soap-output" id="soap-output"></div>
+                    </div>
+                </div>
+                
+                <!-- My Notes Tab -->
+                <div id="tab-notes" class="tab-content hidden">
+                    <div id="notes-loading" class="text-center" style="padding:40px">
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="notes-empty" class="empty-state hidden">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        <p>No notes yet</p>
+                        <p style="font-size:0.875rem">Create your first note in the New Note tab</p>
+                    </div>
+                    <div id="notes-list" class="notes-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentUser = null;
+        let pendingEmail = null;
+        let notes = [];
+        let expandedNoteId = null;
+        let recognition = null;
+        let isRecording = false;
+        
+        const screens = {
+            login: document.getElementById("login-screen"),
+            register: document.getElementById("register-screen"),
+            verify: document.getElementById("verify-screen"),
+            main: document.getElementById("main-app")
+        };
+        
+        async function api(endpoint, options = {}) {
+            const res = await fetch(endpoint, {
+                ...options,
+                headers: { "Content-Type": "application/json", ...options.headers },
+                credentials: "same-origin"
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.detail || "Request failed");
+            }
+            return res.json();
+        }
+        
+        function showScreen(name) {
+            Object.values(screens).forEach(s => s.classList.add("hidden"));
+            screens[name].classList.remove("hidden");
+        }
+        
+        document.querySelectorAll(".tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+                tab.classList.add("active");
+                document.getElementById("tab-" + tab.dataset.tab).classList.remove("hidden");
+                if (tab.dataset.tab === "notes") loadNotes();
+            });
+        });
+        
+        async function checkAuth() {
+            try {
+                const user = await api("/api/auth/me");
+                currentUser = user;
+                document.getElementById("user-name").textContent = user.name;
+                showScreen("main");
+            } catch (e) {
+                showScreen("login");
+            }
+        }
+        
+        document.getElementById("login-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById("login-error");
+            errorEl.classList.add("hidden");
+            try {
+                const data = await api("/api/auth/login", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        email: document.getElementById("login-email").value,
+                        password: document.getElementById("login-password").value
+                    })
+                });
+                currentUser = data.user;
+                document.getElementById("user-name").textContent = data.user.name;
+                showScreen("main");
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.classList.remove("hidden");
+            }
+        });
+        
+        document.getElementById("register-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById("register-error");
+            errorEl.classList.add("hidden");
+            const email = document.getElementById("register-email").value;
+            try {
+                await api("/api/auth/register", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        name: document.getElementById("register-name").value,
+                        email: email,
+                        password: document.getElementById("register-password").value
+                    })
+                });
+                pendingEmail = email;
+                document.getElementById("verify-email-display").textContent = email;
+                showScreen("verify");
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.classList.remove("hidden");
+            }
+        });
+        
+        document.getElementById("verify-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const errorEl = document.getElementById("verify-error");
+            errorEl.classList.add("hidden");
+            try {
+                await api("/api/auth/verify", {
+                    method: "POST",
+                    body: JSON.stringify({ email: pendingEmail, code: document.getElementById("verify-code").value })
+                });
+                checkAuth();
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.classList.remove("hidden");
+            }
+        });
+        
+        document.getElementById("logout-btn").addEventListener("click", async () => {
+            await api("/api/auth/logout", { method: "POST" });
+            currentUser = null;
+            showScreen("login");
+        });
+        
+        document.getElementById("show-register").addEventListener("click", (e) => { e.preventDefault(); showScreen("register"); });
+        document.getElementById("show-login").addEventListener("click", (e) => { e.preventDefault(); showScreen("login"); });
+        document.getElementById("back-to-register").addEventListener("click", (e) => { e.preventDefault(); showScreen("register"); });
+        
+        function initSpeechRecognition() {
+            if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+                document.getElementById("mic-status").textContent = "Speech recognition not supported";
+                document.getElementById("mic-btn").disabled = true;
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = "en-US";
+            let finalTranscript = document.getElementById("dictation").value;
+            
+            recognition.onresult = (event) => {
+                let interimTranscript = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + " ";
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                document.getElementById("dictation").value = finalTranscript + interimTranscript;
+            };
+            recognition.onerror = (event) => { console.error("Speech error:", event.error); stopRecording(); };
+            recognition.onend = () => { if (isRecording) recognition.start(); };
+        }
+        
+        function startRecording() {
+            if (!recognition) return;
+            isRecording = true;
+            recognition.start();
+            document.getElementById("mic-btn").classList.add("recording");
+            document.getElementById("mic-status").textContent = "Listening... tap to stop";
+        }
+        
+        function stopRecording() {
+            isRecording = false;
+            if (recognition) recognition.stop();
+            document.getElementById("mic-btn").classList.remove("recording");
+            document.getElementById("mic-status").textContent = "Tap to start dictation";
+        }
+        
+        document.getElementById("mic-btn").addEventListener("click", () => {
+            if (isRecording) stopRecording(); else startRecording();
+        });
+        
+        document.getElementById("extract-btn").addEventListener("click", async () => {
+            const dictation = document.getElementById("dictation").value.trim();
+            if (!dictation) return;
+            const btn = document.getElementById("extract-btn");
+            btn.disabled = true;
+            btn.innerHTML = "<span class=\"spinner\"></span>";
+            try {
+                const data = await api("/api/generate/extract", { method: "POST", body: JSON.stringify({ dictation }) });
+                if (data.gender) document.getElementById("demo-gender").value = data.gender;
+                if (data.age) document.getElementById("demo-age").value = data.age;
+                if (data.visitType) document.getElementById("demo-visit").value = data.visitType;
+                if (data.specialty) document.getElementById("demo-specialty").value = data.specialty;
+                if (data.chiefComplaint) document.getElementById("demo-complaint").value = data.chiefComplaint;
+                document.getElementById("generate-btn").disabled = false;
+            } catch (err) { alert("Error: " + err.message); }
+            finally { btn.disabled = false; btn.textContent = "Extract Demographics"; }
+        });
+        
+        document.getElementById("generate-btn").addEventListener("click", async () => {
+            const dictation = document.getElementById("dictation").value.trim();
+            if (!dictation) return;
+            const btn = document.getElementById("generate-btn");
+            btn.disabled = true;
+            btn.innerHTML = "<span class=\"spinner\"></span> Generating...";
+            try {
+                const data = await api("/api/generate/soap", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        dictation,
+                        gender: document.getElementById("demo-gender").value || null,
+                        age: document.getElementById("demo-age").value || null,
+                        visitType: document.getElementById("demo-visit").value || null,
+                        specialty: document.getElementById("demo-specialty").value || null,
+                        chiefComplaint: document.getElementById("demo-complaint").value || null
+                    })
+                });
+                document.getElementById("soap-output").innerHTML = formatSOAP(data.soap_note);
+                document.getElementById("soap-card").style.display = "block";
+            } catch (err) { alert("Error: " + err.message); }
+            finally { btn.disabled = false; btn.textContent = "Generate SOAP"; }
+        });
+        
+        function formatSOAP(text) {
+            return text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/^- /gm, "• ");
+        }
+        
+        document.getElementById("copy-btn").addEventListener("click", () => {
+            const text = document.getElementById("soap-output").innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById("copy-btn");
+                btn.textContent = "Copied!";
+                setTimeout(() => btn.textContent = "Copy", 2000);
+            });
+        });
+        
+        document.getElementById("save-btn").addEventListener("click", async () => {
+            const btn = document.getElementById("save-btn");
+            btn.disabled = true;
+            btn.innerHTML = "<span class=\"spinner\"></span>";
+            try {
+                await api("/api/notes", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        label: document.getElementById("note-label").value || null,
+                        patient_age: document.getElementById("demo-age").value || null,
+                        patient_gender: document.getElementById("demo-gender").value || null,
+                        visit_type: document.getElementById("demo-visit").value || null,
+                        specialty: document.getElementById("demo-specialty").value || null,
+                        chief_complaint: document.getElementById("demo-complaint").value || null,
+                        raw_dictation: document.getElementById("dictation").value,
+                        soap_note: document.getElementById("soap-output").innerText
+                    })
+                });
+                btn.textContent = "Saved!";
+                setTimeout(() => {
+                    btn.textContent = "Save";
+                    document.getElementById("dictation").value = "";
+                    document.getElementById("note-label").value = "";
+                    document.getElementById("demo-gender").value = "";
+                    document.getElementById("demo-age").value = "";
+                    document.getElementById("demo-visit").value = "";
+                    document.getElementById("demo-specialty").value = "";
+                    document.getElementById("demo-complaint").value = "";
+                    document.getElementById("soap-output").innerHTML = "";
+                    document.getElementById("soap-card").style.display = "none";
+                    document.getElementById("generate-btn").disabled = true;
+                }, 1500);
+            } catch (err) { alert("Error: " + err.message); btn.textContent = "Save"; }
+            finally { btn.disabled = false; }
+        });
+        
+        async function loadNotes() {
+            const loadingEl = document.getElementById("notes-loading");
+            const emptyEl = document.getElementById("notes-empty");
+            const listEl = document.getElementById("notes-list");
+            loadingEl.classList.remove("hidden");
+            emptyEl.classList.add("hidden");
+            listEl.innerHTML = "";
+            try {
+                notes = await api("/api/notes");
+                loadingEl.classList.add("hidden");
+                if (notes.length === 0) { emptyEl.classList.remove("hidden"); return; }
+                renderNotes();
+            } catch (err) {
+                loadingEl.classList.add("hidden");
+                listEl.innerHTML = "<p class=\"text-center\" style=\"color:var(--danger)\">Error loading notes</p>";
+            }
+        }
+        
+        function renderNotes() {
+            const listEl = document.getElementById("notes-list");
+            listEl.innerHTML = "";
+            const groups = {};
+            notes.forEach(note => {
+                const date = new Date(note.created_at).toLocaleDateString();
+                if (!groups[date]) groups[date] = [];
+                groups[date].push(note);
+            });
+            Object.entries(groups).forEach(([date, dateNotes]) => {
+                const groupEl = document.createElement("div");
+                groupEl.className = "date-group";
+                groupEl.innerHTML = "<div class=\"date-group-header\">" + date + "</div>";
+                dateNotes.forEach(note => {
+                    const noteEl = document.createElement("div");
+                    noteEl.className = "note-card" + (expandedNoteId === note.id ? " expanded" : "");
+                    noteEl.innerHTML = "<div class=\"note-header\"><div><div class=\"note-title\">" + (note.label || "Untitled Note") + "</div><div class=\"note-date\">" + new Date(note.created_at).toLocaleTimeString() + "</div></div></div>" + (note.chief_complaint ? "<div class=\"note-complaint\">" + note.chief_complaint + "</div>" : "") + "<div class=\"note-content\" style=\"display:" + (expandedNoteId === note.id ? "block" : "none") + "\"></div>";
+                    noteEl.addEventListener("click", () => toggleNote(note.id, noteEl));
+                    groupEl.appendChild(noteEl);
+                });
+                listEl.appendChild(groupEl);
+            });
+        }
+        
+        async function toggleNote(id, el) {
+            const contentEl = el.querySelector(".note-content");
+            if (expandedNoteId === id) {
+                expandedNoteId = null;
+                contentEl.style.display = "none";
+                el.classList.remove("expanded");
+                return;
+            }
+            document.querySelectorAll(".note-card.expanded").forEach(card => {
+                card.classList.remove("expanded");
+                card.querySelector(".note-content").style.display = "none";
+            });
+            expandedNoteId = id;
+            el.classList.add("expanded");
+            contentEl.style.display = "block";
+            contentEl.innerHTML = "<div class=\"spinner\"></div>";
+            try {
+                const note = await api("/api/notes/" + id);
+                contentEl.innerHTML = "<div class=\"soap-output\" style=\"margin-bottom:12px\">" + formatSOAP(note.soap_note || "No content") + "</div><div class=\"note-actions\"><button class=\"btn btn-secondary btn-sm\" onclick=\"copyNote(" + id + ", event)\">Copy</button><button class=\"btn btn-danger btn-sm\" onclick=\"deleteNote(" + id + ", event)\">Delete</button></div>";
+            } catch (err) {
+                contentEl.innerHTML = "<p style=\"color:var(--danger)\">Error loading note</p>";
+            }
+        }
+        
+        async function copyNote(id, event) {
+            event.stopPropagation();
+            const note = await api("/api/notes/" + id);
+            navigator.clipboard.writeText(note.soap_note);
+            event.target.textContent = "Copied!";
+            setTimeout(() => event.target.textContent = "Copy", 2000);
+        }
+        
+        async function deleteNote(id, event) {
+            event.stopPropagation();
+            if (!confirm("Delete this note?")) return;
+            try {
+                await api("/api/notes/" + id, { method: "DELETE" });
+                notes = notes.filter(n => n.id !== id);
+                expandedNoteId = null;
+                renderNotes();
+                if (notes.length === 0) document.getElementById("notes-empty").classList.remove("hidden");
+            } catch (err) { alert("Error: " + err.message); }
+        }
+        
+        initSpeechRecognition();
+        checkAuth();
+    </script>
+</body>
+</html>
