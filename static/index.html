@@ -723,36 +723,39 @@
         // content on every onresult event. This eliminates duplication both
         // within sessions and across session restarts.
         
-        var textBeforeSession = '';  // Snapshot of textarea before current session started
+        // Simple speech recognition - no continuous mode, wake lock keeps screen on
 
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
-            recognition.continuous = true;
+            recognition.continuous = false;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
 
             recognition.onresult = function(e) {
-                var sessionFinal = '';
+                var ta = document.getElementById('dictation');
                 var interim = '';
 
-                // Loop through ALL results in this session (from index 0 every time)
-                // This is safe because we REPLACE, not append
+                // Simple: get the final transcript from the last result
                 for (var i = 0; i < e.results.length; i++) {
                     if (e.results[i].isFinal) {
-                        sessionFinal += e.results[i][0].transcript + ' ';
+                        // Append final text
+                        var text = e.results[i][0].transcript;
+                        if (text) {
+                            if (ta.value && !ta.value.endsWith(' ')) {
+                                ta.value += ' ';
+                            }
+                            ta.value += text.trim() + ' ';
+                        }
                     } else {
                         interim = e.results[i][0].transcript;
                     }
                 }
-
-                // REPLACE the textarea: pre-session snapshot + this session's complete text
-                var ta = document.getElementById('dictation');
-                ta.value = textBeforeSession + sessionFinal;
+                
                 ta.scrollTop = ta.scrollHeight;
                 updateWordCount();
 
-                // Show interim text in overlay (NOT in textarea)
+                // Show interim text in overlay
                 var overlay = document.getElementById('interim-overlay');
                 if (interim) {
                     overlay.textContent = interim;
@@ -772,25 +775,19 @@
             };
 
             recognition.onend = function() {
+                // Recording ended naturally - stop cleanly
+                // Wake lock keeps screen on, user can tap mic to add more
                 if (isRecording) {
-                    // Snapshot the textarea BEFORE starting the new session
-                    // This captures everything from all previous sessions
-                    textBeforeSession = document.getElementById('dictation').value;
-                    try {
-                        recognition.start();
-                    } catch(err) {
-                        stopRecording();
-                    }
-                } else {
-                    document.getElementById('interim-overlay').classList.remove('active');
+                    stopRecording();
                 }
+                document.getElementById('interim-overlay').classList.remove('active');
             };
         }
 
         function startRecording() {
             if (!recognition) return;
             captureEncounterTime();
-            textBeforeSession = document.getElementById('dictation').value;
+            // Recording starts fresh each tap
             try {
                 recognition.start();
                 isRecording = true;
