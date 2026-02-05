@@ -48,7 +48,7 @@ Structure the dictation into these sections. ONLY include sections that the doct
 - Numbered diagnosis list
 - Each diagnosis includes a suggested ICD-10 code in parentheses
 - Example: "1. Acute uncomplicated cystitis (N30.00)"
-- After the first diagnosis, add: "(ICD-10 codes suggested — verify before submission)"
+- After all diagnoses, add on a new line: "(ICD-10 codes suggested — verify before submission)"
 
 **PLAN:**
 - Numbered to correspond with assessment items
