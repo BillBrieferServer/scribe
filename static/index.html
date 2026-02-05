@@ -158,8 +158,11 @@
         .soap-body { padding: 18px; }
         .soap-label-input { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 18px; }
         .soap-label-input:focus { outline: none; border-color: var(--border-focus); }
-        .soap-output { white-space: pre-wrap; line-height: 1.8; font-size: 0.95rem; }
-        .soap-output strong { color: var(--teal); }
+        .soap-output { white-space: pre-wrap; line-height: 1.7; font-size: 0.95rem; }
+        .soap-section-header { display: block; background: linear-gradient(135deg, var(--bg-input), var(--bg-hover)); border-left: 4px solid var(--teal); padding: 10px 14px; margin: 20px 0 12px 0; font-family: 'DM Mono', monospace; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; color: var(--teal); text-transform: uppercase; }
+        .soap-section-header:first-child { margin-top: 0; }
+        .soap-subheader { font-weight: 600; color: var(--text-primary); }
+        .soap-output strong { color: var(--text-primary); font-weight: 600; }
         .soap-footer { padding: 16px 18px; border-top: 1px solid var(--border); display: flex; justify-content: center; }
         .btn-new-patient { background: transparent; border: 2px solid var(--teal); color: var(--teal); padding: 14px 32px; font-size: 1rem; min-height: 48px; font-weight: 500; border-radius: 8px; }
         .btn-new-patient:hover { background: rgba(78, 205, 196, 0.1); border-color: var(--teal); color: var(--teal); box-shadow: 0 4px 15px var(--teal-glow); }
@@ -715,7 +718,7 @@
                 });
             }).then(function(data) {
                 var html = data.soap_note
-                    .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN)\*\*/gi, '<strong>$1</strong>')
+                    .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?\*\*/gi, '<div class="soap-section-header">$1</div>').replace(/^(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?$/gim, '<div class="soap-section-header">$1</div>')
                     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
                 document.getElementById('soap-output').innerHTML = html;
                 
@@ -850,7 +853,7 @@
             api('/api/notes/' + id).then(function(note) {
                 var title = generateNoteTitle(note.encounter_time || note.created_at, note.patient_age, note.patient_gender, note.chief_complaint);
                 content.innerHTML = '<div class="soap-title" style="margin-bottom:12px;">' + title + '</div>' +
-                    '<div class="soap-output">' + (note.soap_note || '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') + '</div>' +
+                    '<div class="soap-output">' + (note.soap_note || '').replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?\*\*/gi, '<div class="soap-section-header">$1</div>').replace(/^(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?$/gim, '<div class="soap-section-header">$1</div>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') + '</div>' +
                     '<div class="note-actions">' +
                     '<button class="btn btn-secondary btn-sm" onclick="copyNoteText(this)">Copy</button>' +
                     '<button class="btn btn-danger btn-sm" onclick="deleteNote(' + id + ')">Delete</button>' +
