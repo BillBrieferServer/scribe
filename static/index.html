@@ -716,7 +716,8 @@
                 requestWakeLock();
             }
         });
-        var lastAddedText = '';
+        var addedTexts = new Set();
+        var lastResultLength = 0;
         
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -726,35 +727,25 @@
             
             recognition.onresult = function(e) {
                 var textarea = document.getElementById('dictation');
-                var finalText = '';
                 var interim = '';
                 
-                // Build complete final transcript from all final results
+                // Only process each final result once using its index
                 for (var i = 0; i < e.results.length; i++) {
                     if (e.results[i].isFinal) {
-                        finalText += e.results[i][0].transcript;
+                        var text = e.results[i][0].transcript.trim();
+                        var key = i + '|' + text.substring(0, 50);
+                        
+                        if (text && !addedTexts.has(key)) {
+                            addedTexts.add(key);
+                            var current = textarea.value;
+                            if (current && !current.endsWith(' ')) {
+                                current += ' ';
+                            }
+                            textarea.value = current + text + ' ';
+                        }
                     } else {
                         interim += e.results[i][0].transcript;
                     }
-                }
-                
-                // Only add new text that wasn't added before
-                finalText = finalText.trim();
-                if (finalText && finalText !== lastAddedText) {
-                    // Find what's new by comparing with last added
-                    var newPart = finalText;
-                    if (lastAddedText && finalText.indexOf(lastAddedText) === 0) {
-                        newPart = finalText.substring(lastAddedText.length).trim();
-                    }
-                    
-                    if (newPart) {
-                        var current = textarea.value;
-                        if (current && !current.endsWith(' ')) {
-                            current += ' ';
-                        }
-                        textarea.value = current + newPart + ' ';
-                    }
-                    lastAddedText = finalText;
                 }
                 
                 updateWordCount();
@@ -775,7 +766,7 @@
         function startRecording() {
             if (!recognition) return;
             captureEncounterTime();
-            lastAddedText = '';
+            addedTexts.clear(); lastResultLength = 0;
             isRecording = true;
             recognition.start();
             document.getElementById('mic-btn').classList.add('recording');
