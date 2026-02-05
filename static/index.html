@@ -713,13 +713,14 @@
                 requestWakeLock();
             }
         });
+        var processedResults = new Set();
+        var lastFinalText = '';
+        
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
             recognition.continuous = true;
             recognition.interimResults = true;
-            var processedResults = new Set();
-            var lastFinalText = '';
             
             recognition.onstart = function() {
                 // Don't clear processedResults - keep tracking across restarts
