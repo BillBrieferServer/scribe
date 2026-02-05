@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scribe - Voice to SOAP Notes</title>
+    <title>QIScribe - Voice to SOAP Notes</title>
+    <link rel="icon" type="image/png" href="/static/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,7 +32,7 @@
         .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-card { width: 100%; max-width: 400px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; }
         .auth-logo { text-align: center; margin-bottom: 32px; }
-        .logo-mark { display: inline-flex; width: 56px; height: 56px; background: linear-gradient(135deg, var(--teal), var(--teal-dark)); border-radius: 12px; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 28px; color: white; margin-bottom: 12px; }
+        .logo-mark { width: 56px; height: 56px; border-radius: 12px; margin-bottom: 12px; object-fit: cover; }
         .auth-logo h1 { font-family: 'Playfair Display', serif; font-size: 2rem; }
         .auth-logo .subtitle { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
         .auth-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
@@ -51,7 +52,7 @@
         .header { background: linear-gradient(180deg, #12232f, var(--bg-deepest)); border-bottom: 1px solid var(--border); padding: 12px 20px; }
         .header-inner { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
         .logo { display: flex; align-items: center; gap: 12px; }
-        .logo .logo-mark { width: 40px; height: 40px; font-size: 20px; border-radius: 10px; margin-bottom: 0; }
+        .logo .logo-mark { width: 40px; height: 40px; border-radius: 10px; margin-bottom: 0; }
         .logo-text h1 { font-family: 'Playfair Display', serif; font-size: 1.4rem; line-height: 1.1; }
         .logo-text .subtitle { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
         .header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
@@ -103,12 +104,13 @@
         .textarea-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .textarea-hint { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .textarea-hint.listening { color: var(--red); }
+        .textarea-hint.transcribing { color: #5b9bd5; }
         .word-count { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--text-muted); }
         .textarea-wrapper { position: relative; flex: 1; }
         .dictation-textarea { width: 100%; height: 180px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 14px; color: var(--text-primary); font-size: 0.95rem; line-height: 1.5; resize: none; }
         .dictation-textarea:focus { outline: none; border-color: var(--border-focus); }
         .dictation-textarea.listening { background: var(--red-dark); border-color: rgba(231,76,60,0.4); }
-        .interim-overlay { display: none; position: absolute; bottom: 8px; left: 8px; right: 8px; padding: 10px 12px; background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); border-radius: 6px; font-style: italic; color: #e8a090; font-size: 0.9rem; }
+        .interim-overlay { display: none; position: absolute; bottom: 8px; left: 8px; right: 8px; padding: 10px 12px; background: rgba(91,155,213,0.15); border: 1px solid rgba(91,155,213,0.3); border-radius: 6px; font-style: italic; color: #8ab4d8; font-size: 0.9rem; }
         .interim-overlay.active { display: block; }
         @media (max-width: 600px) { .dictation-area { flex-direction: column; } .mic-column { flex: none; padding-top: 0; padding-bottom: 16px; } }
         .demographics-bar { display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
@@ -157,7 +159,6 @@
         .btn-email { background: transparent; border: 2px solid var(--teal); color: var(--teal); padding: 14px 24px; font-size: 1rem; min-height: 48px; font-weight: 500; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; }
         .btn-email:hover { background: rgba(78, 205, 196, 0.1); box-shadow: 0 4px 15px var(--teal-glow); }
         .btn-email:disabled { opacity: 0.6; cursor: not-allowed; }
-        
         .soap-body { padding: 18px; }
         .soap-label-input { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 18px; }
         .soap-label-input:focus { outline: none; border-color: var(--border-focus); }
@@ -169,7 +170,7 @@
         .soap-disclaimer { font-size: 0.8rem; font-style: italic; color: var(--text-muted); display: block; margin-top: 8px; }
         .soap-plan-item { display: block; padding-left: 1.5em; text-indent: -1.5em; }
         .soap-plan-subitem { display: block; padding-left: 2.5em; text-indent: -1em; }
-        .soap-footer { padding: 16px 18px; border-top: 1px solid var(--border); display: flex; justify-content: center; }
+        .soap-footer { padding: 16px 18px; border-top: 1px solid var(--border); display: flex; justify-content: center; gap: 12px; }
         .btn-new-patient { background: transparent; border: 2px solid var(--teal); color: var(--teal); padding: 14px 32px; font-size: 1rem; min-height: 48px; font-weight: 500; border-radius: 8px; }
         .btn-new-patient:hover { background: rgba(78, 205, 196, 0.1); border-color: var(--teal); color: var(--teal); box-shadow: 0 4px 15px var(--teal-glow); }
         .notes-list { display: flex; flex-direction: column; gap: 10px; }
@@ -195,8 +196,8 @@
     <div id="auth-screen" class="auth-container">
         <div class="auth-card">
             <div class="auth-logo">
-                <div class="logo-mark">S</div>
-                <h1>Scribe</h1>
+                <img class="logo-mark" src="/static/logo.png" alt="QIScribe">
+                <h1>QIScribe</h1>
                 <div class="subtitle">Voice to SOAP Notes</div>
             </div>
             <div id="auth-error" class="auth-error"></div>
@@ -276,9 +277,9 @@
         <header class="header">
             <div class="header-inner">
                 <div class="logo">
-                    <div class="logo-mark">S</div>
+                    <img class="logo-mark" src="/static/logo.png" alt="QIScribe">
                     <div class="logo-text">
-                        <h1>Scribe</h1>
+                        <h1>QIScribe</h1>
                         <div class="subtitle">Voice → SOAP Notes</div>
                     </div>
                 </div>
@@ -404,12 +405,14 @@
         var soapReady = false;
         var currentSubTab = 'dictation';
         var encounterTime = null;
-        
+            textBeforeRecording = "";
+            currentLiveText = "";
+
         function api(endpoint, options) {
             options = options || {};
             return fetch(endpoint, {
                 method: options.method || 'GET',
-                headers: { 'Content-Type': 'application/json' },
+                headers: options.headers || { 'Content-Type': 'application/json' },
                 body: options.body,
                 credentials: 'same-origin'
             }).then(function(res) {
@@ -419,7 +422,7 @@
                 });
             });
         }
-        
+
         function showAuth() {
             document.getElementById('auth-screen').classList.remove('hidden');
             document.getElementById('main-app').classList.add('hidden');
@@ -436,13 +439,13 @@
         function hideError() {
             document.getElementById('auth-error').classList.remove('visible');
         }
-        
+
         function setStatus(status, text) {
             var badge = document.getElementById('status-badge');
             badge.className = 'status-badge' + (status ? ' ' + status : '');
             document.getElementById('status-text').textContent = text || 'Ready';
         }
-        
+
         function setWorkflowStep(step) {
             var steps = ['dictate', 'clean', 'detect', 'process', 'copy'];
             var idx = steps.indexOf(step);
@@ -452,7 +455,7 @@
                 if (i === idx) el.classList.add('active');
             });
         }
-        
+
         function switchSubTab(tab) {
             currentSubTab = tab;
             document.querySelectorAll('.sub-tab').forEach(function(t) { t.classList.remove('active'); });
@@ -463,24 +466,22 @@
                 document.getElementById('soap-ready-badge').classList.remove('visible');
             }
         }
-        
+
         document.querySelectorAll('.sub-tab').forEach(function(tab) {
             tab.addEventListener('click', function() {
                 switchSubTab(tab.dataset.subtab);
             });
         });
-        // Capture encounter time on first interaction
+
         function captureEncounterTime() {
             if (!encounterTime) {
                 encounterTime = new Date();
             }
         }
-        
-        // Generate note title from encounter time and demographics
+
         function generateNoteTitle(encTime, age, gender, chiefComplaint) {
             var parts = [];
-            
-            // Date and Time part
+
             if (encTime) {
                 var d = encTime instanceof Date ? encTime : new Date(encTime);
                 if (d && !isNaN(d.getTime())) {
@@ -498,8 +499,7 @@
                     parts.push(month + '/' + day + '/' + year + ' · ' + hours + ':' + mins + ' ' + ampm);
                 }
             }
-            
-            // Demographics part
+
             var demo = '';
             if (age) demo += age;
             if (gender) {
@@ -510,29 +510,27 @@
                 else demo += gender.charAt(0).toUpperCase();
             }
             if (demo) parts.push(demo);
-            
-            // Chief complaint
+
             if (chiefComplaint) {
                 parts.push(chiefComplaint);
             }
-            
+
             if (parts.length === 0) return 'Untitled Note';
             if (parts.length === 1 && encTime) return parts[0] + ' · Untitled Note';
             return parts.join(' · ');
         }
-        
+
         function updateWordCount() {
             var text = document.getElementById('dictation').value.trim();
             var words = text ? text.split(/\s+/).length : 0;
             document.getElementById('word-count').textContent = words + ' word' + (words !== 1 ? 's' : '');
         }
-        
-        // Track first keystroke in textarea
+
         document.getElementById('dictation').addEventListener('input', function() {
             captureEncounterTime();
             updateWordCount();
         });
-        
+
         document.querySelectorAll('.auth-tab').forEach(function(tab) {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.auth-tab').forEach(function(t) { t.classList.remove('active'); });
@@ -542,7 +540,7 @@
                 hideError();
             });
         });
-        
+
         api('/api/auth/me').then(function(user) {
             currentUser = user;
             document.getElementById('user-name').textContent = user.name;
@@ -550,7 +548,7 @@
         }).catch(function() {
             showAuth();
         });
-        
+
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             hideError();
@@ -568,7 +566,7 @@
                 showError(err.message);
             });
         });
-        
+
         document.getElementById('register-form').addEventListener('submit', function(e) {
             e.preventDefault();
             hideError();
@@ -590,7 +588,7 @@
                 showError(err.message);
             });
         });
-        
+
         document.getElementById('verify-btn').addEventListener('click', function() {
             hideError();
             api('/api/auth/verify', {
@@ -598,9 +596,9 @@
                 body: JSON.stringify({ email: pendingEmail, code: document.getElementById('verify-code').value })
             }).then(function() { location.reload(); }).catch(function(err) { showError(err.message); });
         });
-        
+
         var resetEmail = '';
-        
+
         document.getElementById('forgot-password-link').addEventListener('click', function(e) {
             e.preventDefault();
             hideError();
@@ -608,7 +606,7 @@
             document.getElementById('forgot-form').classList.add('active');
             document.querySelector('.auth-tabs').style.display = 'none';
         });
-        
+
         document.getElementById('back-to-login-link').addEventListener('click', function(e) {
             e.preventDefault();
             hideError();
@@ -616,16 +614,16 @@
             document.getElementById('login-form').classList.add('active');
             document.querySelector('.auth-tabs').style.display = 'flex';
         });
-        
+
         document.getElementById('forgot-btn').addEventListener('click', function() {
             hideError();
             var email = document.getElementById('forgot-email').value;
             if (!email) { showError('Please enter your email'); return; }
-            
+
             this.disabled = true;
             this.textContent = 'Sending...';
             var btn = this;
-            
+
             api('/api/auth/forgot-password', {
                 method: 'POST',
                 body: JSON.stringify({ email: email })
@@ -641,19 +639,19 @@
                 btn.textContent = 'Send Reset Code';
             });
         });
-        
+
         document.getElementById('reset-btn').addEventListener('click', function() {
             hideError();
             var code = document.getElementById('reset-code').value;
             var newPassword = document.getElementById('reset-password').value;
-            
+
             if (!code || code.length !== 6) { showError('Please enter the 6-digit code'); return; }
             if (!newPassword || newPassword.length < 8) { showError('Password must be at least 8 characters'); return; }
-            
+
             this.disabled = true;
             this.textContent = 'Resetting...';
             var btn = this;
-            
+
             api('/api/auth/reset-password', {
                 method: 'POST',
                 body: JSON.stringify({ email: resetEmail, code: code, new_password: newPassword })
@@ -673,11 +671,11 @@
                 btn.textContent = 'Reset Password';
             });
         });
-        
+
         document.getElementById('logout-btn').addEventListener('click', function() {
             api('/api/auth/logout', { method: 'POST' }).then(function() { location.reload(); });
         });
-        
+
         document.querySelectorAll('.tab').forEach(function(tab) {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
@@ -687,78 +685,57 @@
                 if (tab.dataset.tab === 'notes') loadNotes();
             });
         });
-        var recognition = null;
+
+        // ═══════════════════════════════════════════
+        // HYBRID: Web Speech (real-time) + Whisper (final)
+        // ═══════════════════════════════════════════
+        var mediaRecorder = null;
+        var audioChunks = [];
         var isRecording = false;
         var wakeLock = null;
-        
-        async function requestWakeLock() {
-            if ('wakeLock' in navigator) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake lock acquired');
-                } catch (err) {
-                    console.log('Wake lock failed:', err);
-                }
-            }
-        }
-        
-        function releaseWakeLock() {
-            if (wakeLock) {
-                wakeLock.release();
-                wakeLock = null;
-                console.log('Wake lock released');
-            }
-        }
-        
-        // Re-acquire wake lock if page becomes visible while recording
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible' && isRecording) {
-                requestWakeLock();
-            }
-        });
-        // ═══════════════════════════════════════════
-        // SPEECH RECOGNITION (REPLACE STRATEGY)
-        // ═══════════════════════════════════════════
-        // Instead of tracking indices and appending, we REPLACE the textarea
-        // content on every onresult event. This eliminates duplication both
-        // within sessions and across session restarts.
-        
-        // Simple speech recognition - no continuous mode, wake lock keeps screen on
+        var audioStream = null;
+        var recognition = null;
+        var textBeforeRecording = '';
+        var currentLiveText = '';
+        var recordingMimeType = '';
 
+        // Initialize Web Speech API for real-time feedback
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
-            recognition.continuous = false;
+            recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
 
             recognition.onresult = function(e) {
-                var ta = document.getElementById('dictation');
-                var interim = '';
+                if (!isRecording) return;
 
-                // Simple: get the final transcript from the last result
+                var ta = document.getElementById('dictation');
+                var finalText = '';
+                var interimText = '';
+
                 for (var i = 0; i < e.results.length; i++) {
+                    var transcript = e.results[i][0].transcript;
                     if (e.results[i].isFinal) {
-                        // Append final text
-                        var text = e.results[i][0].transcript;
-                        if (text) {
-                            if (ta.value && !ta.value.endsWith(' ')) {
-                                ta.value += ' ';
-                            }
-                            ta.value += text.trim() + ' ';
-                        }
+                        finalText += transcript + ' ';
                     } else {
-                        interim = e.results[i][0].transcript;
+                        interimText += transcript;
                     }
                 }
-                
+
+                currentLiveText = finalText;
+
+                // Update textarea with live text (will be replaced by Whisper)
+                var prefix = textBeforeRecording;
+                if (prefix && !prefix.endsWith(' ')) prefix += ' ';
+                ta.value = prefix + currentLiveText + interimText;
                 ta.scrollTop = ta.scrollHeight;
                 updateWordCount();
 
-                // Show interim text in overlay
+                // Show interim in overlay
                 var overlay = document.getElementById('interim-overlay');
-                if (interim) {
-                    overlay.textContent = interim;
+                if (interimText) {
+                    overlay.textContent = interimText;
                     overlay.classList.add('active');
                 } else {
                     overlay.classList.remove('active');
@@ -766,71 +743,184 @@
             };
 
             recognition.onerror = function(e) {
-                // Only stop for permission denied
-                // 'no-speech' and 'aborted' are NORMAL on mobile — do NOT stop
                 if (e.error === 'not-allowed') {
-                    alert('Microphone access denied. Allow mic in browser settings.');
-                    stopRecording();
+                    console.log('Speech recognition not allowed');
                 }
+                // Don't stop recording - audio capture continues
             };
 
             recognition.onend = function() {
-                // Recording ended naturally - stop cleanly
-                // Wake lock keeps screen on, user can tap mic to add more
-                if (isRecording) {
-                    stopRecording();
+                // Auto-restart if still recording (handles mobile timeouts)
+                if (isRecording && recognition) {
+                    try { recognition.start(); } catch(e) {}
                 }
-                document.getElementById('interim-overlay').classList.remove('active');
             };
         }
 
-        function startRecording() {
-            if (!recognition) return;
-            captureEncounterTime();
-            // Recording starts fresh each tap
-            try {
-                recognition.start();
-                isRecording = true;
-            } catch(e) { alert("Could not start speech recognition."); return; }
-            document.getElementById('mic-btn').classList.add('recording');
-            requestWakeLock();
-            document.getElementById('dictation').classList.add('listening');
-            document.getElementById('mic-hint').textContent = 'Tap to stop';
-            document.getElementById('textarea-hint').textContent = 'Listening - state patient gender & age first...';
-            document.getElementById('textarea-hint').classList.add('listening');
-            document.getElementById('wave-bars').classList.add('active');
-            setStatus('listening', 'Listening');
-            setWorkflowStep('dictate');
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {}
+            }
         }
-        
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible' && isRecording) {
+                requestWakeLock();
+            }
+        });
+
+        async function startRecording() {
+            captureEncounterTime();
+
+            // Save current textarea content
+            textBeforeRecording = document.getElementById('dictation').value;
+            currentLiveText = '';
+
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                // Try to use webm/opus, fallback for Safari
+                recordingMimeType = 'audio/webm;codecs=opus';
+                if (!MediaRecorder.isTypeSupported(recordingMimeType)) {
+                    recordingMimeType = 'audio/mp4';
+                    if (!MediaRecorder.isTypeSupported(recordingMimeType)) {
+                        recordingMimeType = 'audio/webm';
+                    }
+                }
+
+                mediaRecorder = new MediaRecorder(audioStream, { mimeType: recordingMimeType });
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = function(e) {
+                    if (e.data.size > 0) {
+                        audioChunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async function() {
+                    // Show refining status
+                    document.getElementById('textarea-hint').textContent = 'Refining...';
+                    document.getElementById('textarea-hint').classList.remove('listening');
+                    document.getElementById('textarea-hint').classList.add('transcribing');
+                    document.getElementById('interim-overlay').textContent = 'Refining transcription...';
+                    document.getElementById('interim-overlay').classList.add('active');
+                    setStatus('processing', 'Refining');
+
+                    var audioBlob = new Blob(audioChunks, { type: recordingMimeType });
+
+                    // Only send to Whisper if we have meaningful audio
+                    if (audioBlob.size > 1000) {
+                        try {
+                            var formData = new FormData();
+                            formData.append('audio', audioBlob, 'recording.webm');
+
+                            var response = await fetch('/api/transcribe', {
+                                method: 'POST',
+                                body: formData,
+                                credentials: 'same-origin'
+                            });
+
+                            var result = await response.json();
+
+                            if (response.ok && result.text) {
+                                var ta = document.getElementById('dictation');
+                                var whisperText = result.text.trim();
+
+                                // Replace Web Speech text with Whisper's accurate version
+                                var prefix = textBeforeRecording;
+                                if (prefix && !prefix.endsWith(' ')) prefix += ' ';
+                                ta.value = prefix + whisperText + ' ';
+                                ta.scrollTop = ta.scrollHeight;
+                                updateWordCount();
+                            }
+                        } catch (err) {
+                            console.error('Whisper transcription failed:', err);
+                            // Keep Web Speech text as fallback
+                        }
+                    }
+
+                    // Reset UI
+                    document.getElementById('textarea-hint').textContent = 'Speak or type raw clinical notes';
+                    document.getElementById('textarea-hint').classList.remove('transcribing');
+                    document.getElementById('interim-overlay').classList.remove('active');
+                    setStatus('', 'Ready');
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+
+                // Start Web Speech for real-time feedback
+                if (recognition) {
+                    try { recognition.start(); } catch(e) {}
+                }
+
+                document.getElementById('mic-btn').classList.add('recording');
+                requestWakeLock();
+                document.getElementById('dictation').classList.add('listening');
+                document.getElementById('mic-hint').textContent = 'Tap to stop';
+                document.getElementById('textarea-hint').textContent = 'Listening...';
+                document.getElementById('textarea-hint').classList.add('listening');
+                document.getElementById('wave-bars').classList.add('active');
+                setStatus('listening', 'Listening');
+                setWorkflowStep('dictate');
+
+            } catch (err) {
+                console.error('Could not start recording:', err);
+                alert('Could not access microphone. Please allow microphone access and try again.');
+            }
+        }
+
         function stopRecording() {
-            isRecording = false;  // Set FIRST before calling stop
+            isRecording = false;
+
+            // Stop Web Speech
             if (recognition) {
                 try { recognition.stop(); } catch(e) {}
             }
+
+            // Stop MediaRecorder (triggers onstop which sends to Whisper)
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+
+            if (audioStream) {
+                audioStream.getTracks().forEach(function(track) { track.stop(); });
+                audioStream = null;
+            }
+
             document.getElementById('mic-btn').classList.remove('recording');
             releaseWakeLock();
             document.getElementById('dictation').classList.remove('listening');
             document.getElementById('mic-hint').textContent = 'Tap to speak';
-            document.getElementById('textarea-hint').textContent = 'Speak or type raw clinical notes';
-            document.getElementById('textarea-hint').classList.remove('listening');
             document.getElementById('wave-bars').classList.remove('active');
-            document.getElementById('interim-overlay').classList.remove('active');
-            setStatus('', 'Ready');
         }
-        
+
         document.getElementById('mic-btn').addEventListener('click', function() {
-            if (isRecording) stopRecording(); else startRecording();
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
         });
-        
+
         document.getElementById('sample-btn').addEventListener('click', function() {
             captureEncounterTime();
             document.getElementById('dictation').value = '29 year old female presenting to clinic with sore throat for 3 days. Reports pain with swallowing, mild fever, and fatigue. No cough or runny nose. Past medical history unremarkable. On exam, temperature 100.4F, pharynx erythematous with tonsillar exudates, tender anterior cervical lymphadenopathy. Rapid strep test positive. Assessment: Streptococcal pharyngitis. Plan: Amoxicillin 500mg TID for 10 days, rest, fluids, follow up if not improving in 48-72 hours.';
             updateWordCount();
             setWorkflowStep('dictate');
         });
-        
+
         function clearAll() {
+            if (isRecording) { stopRecording(); }
             document.getElementById('dictation').value = '';
             document.getElementById('soap-output').innerHTML = '';
             document.getElementById('soap-full').classList.remove('visible');
@@ -844,15 +934,18 @@
             demographics = {};
             soapReady = false;
             encounterTime = null;
+            textBeforeRecording = "";
+            currentLiveText = "";
             updateWordCount();
             setWorkflowStep('dictate');
             setStatus('', 'Ready');
             switchSubTab('dictation');
         }
-        
+
         document.getElementById('clear-btn').addEventListener('click', clearAll);
         document.getElementById('new-patient-btn').addEventListener('click', clearAll);
         document.getElementById('new-patient-top-btn').addEventListener('click', clearAll);
+
         function renderDemographics(data) {
             demographics = data;
             var pills = document.getElementById('demographics-pills');
@@ -866,7 +959,7 @@
             ];
             var conf = data.confidence || 0.5;
             var dotClass = conf > 0.7 ? 'high' : conf > 0.4 ? 'medium' : 'low';
-            
+
             fields.forEach(function(f) {
                 if (!data[f.key]) return;
                 var pill = document.createElement('span');
@@ -874,47 +967,30 @@
                 pill.innerHTML = '<span class="demo-pill-label">' + f.label + ':</span> <span class="demo-pill-value">' + data[f.key] + '</span> <span class="demo-pill-dot ' + dotClass + '"></span>';
                 pills.appendChild(pill);
             });
-            
+
             if (pills.children.length > 0) {
                 document.getElementById('demographics-bar').classList.add('visible');
             }
         }
-        
-        // Deduplication safety net for speech recognition artifacts
-        function deduplicateDictation(text) {
-            if (!text) return text;
-            var sentences = text.split(/[.?!]+/).map(function(s) { return s.trim(); }).filter(function(s) { return s; });
-            if (sentences.length < 2) return text;
-            var cleaned = [];
-            var lastNorm = '';
-            for (var i = 0; i < sentences.length; i++) {
-                var norm = sentences[i].toLowerCase().replace(/[^a-z0-9\s]/g, '');
-                if (norm !== lastNorm) {
-                    cleaned.push(sentences[i]);
-                    lastNorm = norm;
-                }
-            }
-            return cleaned.join('. ') + '.';
-        }
-        
+
         document.getElementById('generate-btn').addEventListener('click', function() {
-            var rawDictation = document.getElementById('dictation').value.trim();
-            var dictation = deduplicateDictation(rawDictation);
+            if (isRecording) { stopRecording(); }
+            var dictation = document.getElementById('dictation').value.trim();
             if (!dictation) return alert('Please enter some dictation first');
-            
+
             var btn = this;
             btn.disabled = true;
             btn.textContent = 'Generating...';
             setStatus('processing', 'Processing');
             setWorkflowStep('detect');
-            
+
             api('/api/generate/extract', {
                 method: 'POST',
                 body: JSON.stringify({ dictation: dictation })
             }).then(function(data) {
                 renderDemographics(data);
                 setWorkflowStep('process');
-                
+
                 return api('/api/generate/soap', {
                     method: 'POST',
                     body: JSON.stringify({
@@ -935,33 +1011,32 @@
                     .replace(/^(\s+-\s+.*)$/gm, '<span class="soap-plan-subitem">$1</span>')
                     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
                 document.getElementById('soap-output').innerHTML = html;
-                
-                // Generate and display title
+
                 var title = generateNoteTitle(encounterTime, demographics.age, demographics.gender, demographics.chiefComplaint);
                 document.getElementById('soap-title').textContent = title;
-                
+
                 var demoTag = document.getElementById('soap-meta-demo');
                 var visitTag = document.getElementById('soap-meta-visit');
                 var complaintTag = document.getElementById('soap-meta-complaint');
-                
+
                 demoTag.textContent = (demographics.age || '') + (demographics.gender ? ' ' + demographics.gender.charAt(0).toUpperCase() : '');
                 demoTag.style.display = demoTag.textContent ? 'inline-block' : 'none';
                 visitTag.textContent = demographics.visitType || '';
                 visitTag.style.display = visitTag.textContent ? 'inline-block' : 'none';
                 complaintTag.textContent = demographics.chiefComplaint || '';
                 complaintTag.style.display = complaintTag.textContent ? 'inline-block' : 'none';
-                
+
                 document.getElementById('soap-empty').style.display = 'none';
                 document.getElementById('soap-full').classList.add('visible');
                 document.getElementById('soap-saved').style.display = 'none';
-                
+
                 soapReady = true;
                 setWorkflowStep('copy');
                 setStatus('done', 'Done');
-                
+
                 switchSubTab('soap');
                 autoSaveNote();
-                
+
             }).catch(function(err) {
                 alert('Error: ' + err.message);
                 setStatus('', 'Ready');
@@ -970,11 +1045,12 @@
                 btn.textContent = 'Generate SOAP Note';
             });
         });
+
         function autoSaveNote() {
             var manualLabel = document.getElementById('note-label').value;
             var autoLabel = generateNoteTitle(encounterTime, demographics.age, demographics.gender, demographics.chiefComplaint);
             var finalLabel = manualLabel || autoLabel;
-            
+
             api('/api/notes', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -995,7 +1071,7 @@
                 console.error('Auto-save failed:', err);
             });
         }
-        
+
         function emailNote(btn) {
             if (!currentNoteId) {
                 alert('Please wait for the note to save first');
@@ -1004,7 +1080,7 @@
             btn.disabled = true;
             var origText = btn.innerHTML;
             btn.innerHTML = 'Sending...';
-            
+
             api('/api/notes/' + currentNoteId + '/email', { method: 'POST' })
                 .then(function() {
                     btn.innerHTML = '✓ Sent!';
@@ -1016,15 +1092,15 @@
                     btn.disabled = false;
                 });
         }
-        
+
         document.getElementById('email-btn').addEventListener('click', function() {
             emailNote(this);
         });
-        
+
         document.getElementById('email-btn-bottom').addEventListener('click', function() {
             emailNote(this);
         });
-        
+
         document.getElementById('copy-btn').addEventListener('click', function() {
             var text = document.getElementById('soap-output').innerText;
             navigator.clipboard.writeText(text);
@@ -1033,12 +1109,12 @@
             var self = this;
             setTimeout(function() { self.innerHTML = origText; }, 2000);
         });
-        
+
         function loadNotes() {
             document.getElementById('notes-loading').classList.remove('hidden');
             document.getElementById('notes-empty').classList.add('hidden');
             document.getElementById('notes-list').innerHTML = '';
-            
+
             api('/api/notes').then(function(data) {
                 notes = data;
                 document.getElementById('notes-loading').classList.add('hidden');
@@ -1046,11 +1122,11 @@
                     document.getElementById('notes-empty').classList.remove('hidden');
                     return;
                 }
-                
+
                 var groups = {};
                 var today = new Date().toDateString();
                 var yesterday = new Date(Date.now() - 86400000).toDateString();
-                
+
                 notes.forEach(function(note) {
                     var d = new Date(note.encounter_time || note.created_at);
                     var ds = d.toDateString();
@@ -1058,9 +1134,8 @@
                     if (!groups[label]) groups[label] = [];
                     groups[label].push(note);
                 });
-                
+
                 var list = document.getElementById('notes-list');
-                // Sort date groups: Today first, Yesterday second, then by date descending
                 var sortedDates = Object.keys(groups).sort(function(a, b) {
                     if (a === 'Today') return -1;
                     if (b === 'Today') return 1;
@@ -1069,11 +1144,9 @@
                     return new Date(b) - new Date(a);
                 });
                 sortedDates.forEach(function(date) {
-                    // Sort notes within group by encounter_time/created_at descending
                     groups[date].sort(function(a, b) {
                         var sa = a.encounter_time || a.created_at;
                         var sb = b.encounter_time || b.created_at;
-                        // Handle date format with space instead of T
                         if (sa && sa.indexOf('T') === -1) sa = sa.replace(' ', 'T') + 'Z';
                         if (sb && sb.indexOf('T') === -1) sb = sb.replace(' ', 'T') + 'Z';
                         var ta = new Date(sa);
@@ -1083,15 +1156,15 @@
                     var group = document.createElement('div');
                     group.className = 'date-group';
                     group.innerHTML = '<div class="date-group-header">' + date + '</div>';
-                    
+
                     groups[date].forEach(function(note) {
                         var card = document.createElement('div');
                         card.className = 'note-card';
                         card.dataset.id = note.id;
-                        
+
                         var title = generateNoteTitle(note.encounter_time || note.created_at, note.patient_age, note.patient_gender, note.chief_complaint);
                         var labelHtml = note.label ? '<div class="note-label">' + note.label + '</div>' : '';
-                        
+
                         card.innerHTML = '<div class="note-header"><span class="note-title">' + title + '</span></div>' + labelHtml + '<div class="note-content"></div>';
                         group.appendChild(card);
                     });
@@ -1101,22 +1174,23 @@
                 document.getElementById('notes-loading').classList.add('hidden');
             });
         }
+
         document.getElementById('notes-list').addEventListener('click', function(e) {
             var card = e.target.closest('.note-card');
             if (!card || e.target.closest('button')) return;
-            
+
             var id = card.dataset.id;
             var content = card.querySelector('.note-content');
-            
+
             if (card.classList.contains('expanded')) {
                 card.classList.remove('expanded');
                 return;
             }
-            
+
             document.querySelectorAll('.note-card').forEach(function(c) { c.classList.remove('expanded'); });
             card.classList.add('expanded');
             content.innerHTML = '<div class="spinner"></div>';
-            
+
             api('/api/notes/' + id).then(function(note) {
                 var title = generateNoteTitle(note.encounter_time || note.created_at, note.patient_age, note.patient_gender, note.chief_complaint);
                 content.innerHTML = '<div class="soap-title" style="margin-bottom:12px;">' + title + '</div>' +
@@ -1127,14 +1201,14 @@
                     '</div>';
             });
         });
-        
+
         window.copyNoteText = function(btn) {
             var text = btn.parentElement.previousElementSibling.innerText;
             navigator.clipboard.writeText(text);
             btn.textContent = 'Copied!';
             setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
         };
-        
+
         window.deleteNote = function(id) {
             if (!confirm('Delete this note?')) return;
             api('/api/notes/' + id, { method: 'DELETE' }).then(function() { loadNotes(); });

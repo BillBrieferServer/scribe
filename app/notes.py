@@ -153,7 +153,7 @@ async def email_note(note_id: int, request: Request):
     
     # Use the note label (which has local time from frontend) or build from metadata
     if row["label"]:
-        subject = "Scribe Note — " + row["label"]
+        subject = "QIScribe Note — " + row["label"]
     else:
         parts = []
         if row["patient_age"]:
@@ -161,7 +161,7 @@ async def email_note(note_id: int, request: Request):
             parts.append(f"{row['patient_age']}{gender_char}")
         if row["chief_complaint"]:
             parts.append(row["chief_complaint"][:30])
-        subject = "Scribe Note"
+        subject = "QIScribe Note"
         if parts:
             subject += " — " + " · ".join(parts)
     

@@ -7,18 +7,20 @@ from app.database import init_db
 from app.auth import router as auth_router
 from app.notes import router as notes_router
 from app.generate import router as generate_router
+from app.transcribe import router as transcribe_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     yield
 
-app = FastAPI(title="Scribe", lifespan=lifespan)
+app = FastAPI(title="QIScribe", lifespan=lifespan)
 
 # Include routers
 app.include_router(auth_router)
 app.include_router(notes_router)
 app.include_router(generate_router)
+app.include_router(transcribe_router)
 
 # Health check
 @app.get("/health")
