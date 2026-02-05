@@ -192,3 +192,71 @@ async def me(request: Request):
         name=user["name"],
         email_verified=bool(user["email_verified"])
     )
+
+@router.post("/forgot-password")
+async def forgot_password(data: dict):
+    email = data.get("email", "").lower().strip()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, email_verified FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        
+        if not user or not user["email_verified"]:
+            # Don't reveal if user exists
+            return {"message": "If an account exists with that email, a reset code has been sent"}
+        
+        code = generate_verification_code()
+        code_hash = hash_token(code)
+        expires = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
+        
+        cursor.execute('''
+            UPDATE users SET reset_code_hash = ?, reset_code_expires = ?
+            WHERE id = ?
+        ''', (code_hash, expires, user["id"]))
+        conn.commit()
+    
+    from app.email_service import send_reset_email
+    send_reset_email(email, code, user["name"])
+    
+    return {"message": "If an account exists with that email, a reset code has been sent"}
+
+@router.post("/reset-password")
+async def reset_password(data: dict):
+    email = data.get("email", "").lower().strip()
+    code = data.get("code", "").strip()
+    new_password = data.get("new_password", "")
+    
+    if not email or not code or not new_password:
+        raise HTTPException(status_code=400, detail="Email, code, and new password are required")
+    
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    
+    code_hash = hash_token(code)
+    
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT id, reset_code_expires FROM users 
+            WHERE email = ? AND reset_code_hash = ?
+        ''', (email, code_hash))
+        user = cursor.fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=400, detail="Invalid reset code")
+        
+        if datetime.fromisoformat(user["reset_code_expires"]) < datetime.utcnow():
+            raise HTTPException(status_code=400, detail="Reset code expired")
+        
+        password_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+        
+        cursor.execute('''
+            UPDATE users SET password_hash = ?, reset_code_hash = NULL, reset_code_expires = NULL
+            WHERE id = ?
+        ''', (password_hash, user["id"]))
+        conn.commit()
+    
+    return {"message": "Password reset successfully"}

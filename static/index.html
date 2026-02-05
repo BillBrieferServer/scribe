@@ -211,6 +211,9 @@
                     <input type="password" id="login-password" class="form-input" required>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%">Sign In</button>
+                <div style="text-align:center;margin-top:16px;">
+                    <a href="#" id="forgot-password-link" style="color:var(--teal);font-size:0.9rem;">Forgot Password?</a>
+                </div>
             </form>
             <form id="register-form" class="auth-form">
                 <div class="form-group">
@@ -236,6 +239,33 @@
                     <input type="text" id="verify-code" class="form-input" maxlength="6" style="text-align:center;font-size:1.5rem;letter-spacing:8px;">
                 </div>
                 <button type="button" id="verify-btn" class="btn btn-primary" style="width:100%">Verify</button>
+            </div>
+            <div id="forgot-form" class="auth-form">
+                <p style="text-align:center;color:var(--text-secondary);margin-bottom:20px;">
+                    Enter your email address and we'll send you a code to reset your password.
+                </p>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="forgot-email" class="form-input" required>
+                </div>
+                <button type="button" id="forgot-btn" class="btn btn-primary" style="width:100%">Send Reset Code</button>
+                <div style="text-align:center;margin-top:16px;">
+                    <a href="#" id="back-to-login-link" style="color:var(--text-muted);font-size:0.9rem;">Back to Sign In</a>
+                </div>
+            </div>
+            <div id="reset-form" class="auth-form">
+                <p style="text-align:center;color:var(--text-secondary);margin-bottom:20px;">
+                    Enter the 6-digit code sent to<br><strong id="reset-email-display"></strong>
+                </p>
+                <div class="form-group">
+                    <label>Code</label>
+                    <input type="text" id="reset-code" class="form-input" maxlength="6" style="text-align:center;font-size:1.5rem;letter-spacing:8px;">
+                </div>
+                <div class="form-group">
+                    <label>New Password (min 8 chars)</label>
+                    <input type="password" id="reset-password" class="form-input" required minlength="8">
+                </div>
+                <button type="button" id="reset-btn" class="btn btn-primary" style="width:100%">Reset Password</button>
             </div>
         </div>
     </div>
@@ -558,6 +588,81 @@
                 method: 'POST',
                 body: JSON.stringify({ email: pendingEmail, code: document.getElementById('verify-code').value })
             }).then(function() { location.reload(); }).catch(function(err) { showError(err.message); });
+        });
+        
+        var resetEmail = '';
+        
+        document.getElementById('forgot-password-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            hideError();
+            document.querySelectorAll('.auth-form').forEach(function(f) { f.classList.remove('active'); });
+            document.getElementById('forgot-form').classList.add('active');
+            document.querySelector('.auth-tabs').style.display = 'none';
+        });
+        
+        document.getElementById('back-to-login-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            hideError();
+            document.querySelectorAll('.auth-form').forEach(function(f) { f.classList.remove('active'); });
+            document.getElementById('login-form').classList.add('active');
+            document.querySelector('.auth-tabs').style.display = 'flex';
+        });
+        
+        document.getElementById('forgot-btn').addEventListener('click', function() {
+            hideError();
+            var email = document.getElementById('forgot-email').value;
+            if (!email) { showError('Please enter your email'); return; }
+            
+            this.disabled = true;
+            this.textContent = 'Sending...';
+            var btn = this;
+            
+            api('/api/auth/forgot-password', {
+                method: 'POST',
+                body: JSON.stringify({ email: email })
+            }).then(function() {
+                resetEmail = email;
+                document.getElementById('reset-email-display').textContent = email;
+                document.querySelectorAll('.auth-form').forEach(function(f) { f.classList.remove('active'); });
+                document.getElementById('reset-form').classList.add('active');
+            }).catch(function(err) {
+                showError(err.message);
+            }).finally(function() {
+                btn.disabled = false;
+                btn.textContent = 'Send Reset Code';
+            });
+        });
+        
+        document.getElementById('reset-btn').addEventListener('click', function() {
+            hideError();
+            var code = document.getElementById('reset-code').value;
+            var newPassword = document.getElementById('reset-password').value;
+            
+            if (!code || code.length !== 6) { showError('Please enter the 6-digit code'); return; }
+            if (!newPassword || newPassword.length < 8) { showError('Password must be at least 8 characters'); return; }
+            
+            this.disabled = true;
+            this.textContent = 'Resetting...';
+            var btn = this;
+            
+            api('/api/auth/reset-password', {
+                method: 'POST',
+                body: JSON.stringify({ email: resetEmail, code: code, new_password: newPassword })
+            }).then(function() {
+                alert('Password reset successfully! Please sign in with your new password.');
+                document.querySelectorAll('.auth-form').forEach(function(f) { f.classList.remove('active'); });
+                document.getElementById('login-form').classList.add('active');
+                document.querySelector('.auth-tabs').style.display = 'flex';
+                document.getElementById('login-email').value = resetEmail;
+                document.getElementById('reset-code').value = '';
+                document.getElementById('reset-password').value = '';
+                document.getElementById('forgot-email').value = '';
+            }).catch(function(err) {
+                showError(err.message);
+            }).finally(function() {
+                btn.disabled = false;
+                btn.textContent = 'Reset Password';
+            });
         });
         
         document.getElementById('logout-btn').addEventListener('click', function() {

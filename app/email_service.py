@@ -31,3 +31,32 @@ If you didn't request this, please ignore this email.
     except Exception as e:
         print(f"Email send error: {e}")
         return False
+
+def send_reset_email(to_email: str, code: str, name: str) -> bool:
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = settings.FROM_EMAIL
+        msg['To'] = to_email
+        msg['Subject'] = 'Scribe - Password Reset Code'
+        
+        body = f'''Hi {name},
+
+Your password reset code is: {code}
+
+This code will expire in 15 minutes.
+
+If you didn't request this, please ignore this email.
+
+- Scribe Team
+'''
+        msg.attach(MIMEText(body, 'plain'))
+        
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASS)
+            server.send_message(msg)
+        
+        return True
+    except Exception as e:
+        print(f"Email send error: {e}")
+        return False

@@ -66,6 +66,16 @@ def init_db():
         except sqlite3.OperationalError:
             pass  # Column already exists
         
+        # Add reset code columns for forgot password feature
+        try:
+            cursor.execute('ALTER TABLE users ADD COLUMN reset_code_hash TEXT')
+        except sqlite3.OperationalError:
+            pass
+        try:
+            cursor.execute('ALTER TABLE users ADD COLUMN reset_code_expires TEXT')
+        except sqlite3.OperationalError:
+            pass
+        
         # Create indexes
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)')
