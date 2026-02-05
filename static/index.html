@@ -716,40 +716,39 @@
                 requestWakeLock();
             }
         });
-        var addedTexts = new Set();
-        var lastResultLength = 0;
+        var lastResultIndex = 0;
         
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
             recognition.continuous = true;
             recognition.interimResults = true;
+            recognition.lang = 'en-US';
             
             recognition.onresult = function(e) {
-                var textarea = document.getElementById('dictation');
+                var newFinal = '';
                 var interim = '';
                 
-                // Only process each final result once using its index
-                for (var i = 0; i < e.results.length; i++) {
+                // CRITICAL: Only process results we haven't seen yet
+                for (var i = lastResultIndex; i < e.results.length; i++) {
+                    var transcript = e.results[i][0].transcript;
                     if (e.results[i].isFinal) {
-                        var text = e.results[i][0].transcript.trim();
-                        var key = i + '|' + text.substring(0, 50);
-                        
-                        if (text && !addedTexts.has(key)) {
-                            addedTexts.add(key);
-                            var current = textarea.value;
-                            if (current && !current.endsWith(' ')) {
-                                current += ' ';
-                            }
-                            textarea.value = current + text + ' ';
-                        }
+                        newFinal += transcript + ' ';
+                        lastResultIndex = i + 1;
                     } else {
-                        interim += e.results[i][0].transcript;
+                        interim = transcript;
                     }
                 }
                 
-                updateWordCount();
+                // Append only NEW finalized text
+                if (newFinal) {
+                    var ta = document.getElementById('dictation');
+                    ta.value += newFinal;
+                    ta.scrollTop = ta.scrollHeight;
+                    updateWordCount();
+                }
                 
+                // Show interim text in overlay
                 var overlay = document.getElementById('interim-overlay');
                 if (interim) {
                     overlay.textContent = interim;
@@ -759,16 +758,36 @@
                 }
             };
             
-            recognition.onerror = function() { stopRecording(); };
-            recognition.onend = function() { if (isRecording) { stopRecording(); } };
+            recognition.onerror = function(e) {
+                // Only stop for permission denied - let onend handle other errors
+                if (e.error === 'not-allowed') {
+                    alert('Microphone access denied. Allow mic in browser settings.');
+                    stopRecording();
+                }
+            };
+            
+            recognition.onend = function() {
+                if (isRecording) {
+                    // Reset index for fresh session and restart
+                    lastResultIndex = 0;
+                    try {
+                        recognition.start();
+                    } catch(err) {
+                        stopRecording();
+                    }
+                } else {
+                    document.getElementById('interim-overlay').classList.remove('active');
+                }
+            };
         }
         
         function startRecording() {
             if (!recognition) return;
             captureEncounterTime();
-            addedTexts.clear(); lastResultLength = 0;
-            isRecording = true;
-            recognition.start();
+            lastResultIndex = 0;
+            try {
+                recognition.start();
+                isRecording = true;
             document.getElementById('mic-btn').classList.add('recording');
             requestWakeLock();
             document.getElementById('dictation').classList.add('listening');
@@ -781,8 +800,10 @@
         }
         
         function stopRecording() {
-            isRecording = false;
-            if (recognition) recognition.stop();
+            isRecording = false;  // Set FIRST before calling stop
+            if (recognition) {
+                try { recognition.stop(); } catch(e) {}
+            }
             document.getElementById('mic-btn').classList.remove('recording');
             releaseWakeLock();
             document.getElementById('dictation').classList.remove('listening');
