@@ -71,9 +71,9 @@
         .tab:hover { color: var(--text-secondary); }
         .tab.active { color: var(--text-primary); border-bottom-color: var(--teal); }
         .sub-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 4px; }
-        .sub-tab { flex: 1; padding: 10px 16px; background: transparent; border: none; border-radius: 8px; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .sub-tab:hover { color: var(--text-secondary); background: var(--bg-hover); }
-        .sub-tab.active { background: var(--bg-input); color: var(--text-primary); }
+        .sub-tab { flex: 1; padding: 10px 16px; background: var(--bg-card); border: none; border-bottom: 2px solid transparent; border-radius: 8px 8px 0 0; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; opacity: 0.6; }
+        .sub-tab:hover { color: var(--text-secondary); background: var(--bg-hover); opacity: 0.8; }
+        .sub-tab.active { background: var(--bg-input); color: var(--teal); border-bottom: 2px solid var(--teal); opacity: 1; }
         .sub-tab-badge { display: none; padding: 2px 6px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; background: var(--teal); color: #0a1520; animation: pulse 1.5s infinite; }
         .sub-tab-badge.visible { display: inline-block; }
         .sub-content { display: none; }
