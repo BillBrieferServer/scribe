@@ -151,23 +151,19 @@ async def email_note(note_id: int, request: Request):
     if not row:
         raise HTTPException(status_code=404, detail="Note not found")
     
-    # Build subject line from note metadata
-    parts = []
-    if row["encounter_time"]:
-        try:
-            dt = datetime.fromisoformat(row["encounter_time"].replace("Z", "+00:00"))
-            parts.append(dt.strftime("%-I:%M %p"))
-        except:
-            pass
-    if row["patient_age"]:
-        gender_char = row["patient_gender"][0].upper() if row["patient_gender"] else ""
-        parts.append(f"{row['patient_age']}{gender_char}")
-    if row["chief_complaint"]:
-        parts.append(row["chief_complaint"][:30])
-    
-    subject = "Scribe Note"
-    if parts:
-        subject += " — " + " · ".join(parts)
+    # Use the note label (which has local time from frontend) or build from metadata
+    if row["label"]:
+        subject = "Scribe Note — " + row["label"]
+    else:
+        parts = []
+        if row["patient_age"]:
+            gender_char = row["patient_gender"][0].upper() if row["patient_gender"] else ""
+            parts.append(f"{row['patient_age']}{gender_char}")
+        if row["chief_complaint"]:
+            parts.append(row["chief_complaint"][:30])
+        subject = "Scribe Note"
+        if parts:
+            subject += " — " + " · ".join(parts)
     
     # Send email
     if not send_soap_note_email(user["email"], subject, row["soap_note"]):
