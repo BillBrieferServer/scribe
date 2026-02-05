@@ -2,590 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scribe - Voice to SOAP Notes</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         :root {
             --bg-deepest: #0a1520;
             --bg-card: #0f1d2a;
             --bg-input: #132232;
-            --bg-hover: #1a2d3f;
             --border: #1e3a4f;
-            --border-focus: #2d5a7b;
-            
             --teal: #4ecdc4;
             --teal-dark: #3ba89f;
-            --teal-glow: rgba(78, 205, 196, 0.3);
-            --blue: #5b9bd5;
-            --blue-dark: #1e3a5f;
             --red: #e74c3c;
-            --red-dark: #2d1518;
-            --red-border: #5c2020;
-            --amber: #f0a500;
-            --amber-dark: #2d2010;
-            --green: #2ecc71;
-            
             --text-primary: #e8eef4;
             --text-secondary: #8a9bae;
             --text-muted: #5a6a7a;
-            --text-faint: #3a4a5a;
-            
-            --font-sans: 'DM Sans', -apple-system, sans-serif;
-            --font-mono: 'DM Mono', monospace;
-            --font-display: 'Playfair Display', Georgia, serif;
         }
-        
         body {
-            font-family: var(--font-sans);
+            font-family: 'DM Sans', sans-serif;
             background: var(--bg-deepest);
             color: var(--text-primary);
             min-height: 100vh;
-            line-height: 1.5;
         }
+        .hidden { display: none !important; }
         
-        /* Animations */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        @keyframes ripple {
-            0% { transform: scale(1); opacity: 0.4; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-        @keyframes wave {
-            0%, 100% { height: 8px; }
-            50% { height: 24px; }
-        }
-        
-        .fade-in { animation: fadeInUp 0.3s ease-out; }
-        
-        /* Container */
-        .container { max-width: 900px; margin: 0 auto; padding: 0 16px; }
-        
-        /* Header */
-        .header {
-            background: linear-gradient(180deg, #12232f 0%, var(--bg-deepest) 100%);
-            border-bottom: 1px solid var(--border);
-            padding: 16px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .logo-mark {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: var(--font-mono);
-            font-weight: 600;
-            font-size: 20px;
-            color: white;
-        }
-        .logo-text h1 {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            line-height: 1.1;
-        }
-        .logo-text .subtitle {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            background: var(--bg-card);
-            color: var(--text-muted);
-        }
-        .status-badge.listening {
-            background: var(--red-dark);
-            color: var(--red);
-        }
-        .status-badge.processing {
-            background: var(--blue-dark);
-            color: var(--blue);
-        }
-        .status-badge.done {
-            background: rgba(78, 205, 196, 0.15);
-            color: var(--teal);
-        }
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-        .status-badge.listening .status-dot,
-        .status-badge.processing .status-dot {
-            animation: pulse 1s infinite;
-        }
-        .user-info {
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-        .btn-logout {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            cursor: pointer;
-            padding: 4px 8px;
-        }
-        .btn-logout:hover { color: var(--text-secondary); }
-        
-        /* Tabs */
-        .tabs {
-            display: flex;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            margin-top: 1px;
-        }
-        .tab {
-            flex: 1;
-            padding: 14px 20px;
-            border: none;
-            background: none;
-            font-family: var(--font-sans);
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .tab:hover { color: var(--text-secondary); }
-        .tab.active {
-            color: var(--text-primary);
-            border-bottom-color: var(--teal);
-        }
-        .tab-badge {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            padding: 2px 6px;
-            border-radius: 8px;
-            background: var(--teal);
-            color: var(--bg-deepest);
-            text-transform: uppercase;
-        }
-        
-        /* Main content */
-        .main-content { padding: 24px 0 40px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeInUp 0.3s ease-out; }
-        
-        /* Microphone Section */
-        .mic-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 32px 0;
-        }
-        .mic-btn {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid var(--border);
-            background: linear-gradient(145deg, var(--bg-card), var(--bg-input));
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            transition: all 0.3s;
-        }
-        .mic-btn svg {
-            width: 32px;
-            height: 32px;
-            fill: var(--text-secondary);
-            transition: fill 0.3s;
-        }
-        .mic-btn:hover { border-color: var(--border-focus); }
-        .mic-btn:hover svg { fill: var(--text-primary); }
-        .mic-btn.recording {
-            background: linear-gradient(145deg, var(--red-dark), #1a0a0a);
-            border-color: var(--red);
-        }
-        .mic-btn.recording svg { fill: var(--red); }
-        .mic-btn.recording::before {
-            content: "";
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 2px solid var(--red);
-            animation: ripple 1.5s infinite;
-        }
-        .mic-hint {
-            margin-top: 12px;
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .wave-bars {
-            display: none;
-            gap: 3px;
-            height: 32px;
-            align-items: center;
-            margin-top: 12px;
-        }
-        .wave-bars.active { display: flex; }
-        .wave-bar {
-            width: 4px;
-            background: var(--red);
-            border-radius: 2px;
-            animation: wave 0.5s ease-in-out infinite;
-        }
-        .wave-bar:nth-child(1) { animation-delay: 0s; }
-        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
-        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
-        .wave-bar:nth-child(4) { animation-delay: 0.1s; }
-        .wave-bar:nth-child(5) { animation-delay: 0s; }
-        
-        /* Dictation Area */
-        .dictation-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .dictation-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .word-count {
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-        .dictation-textarea {
-            width: 100%;
-            min-height: 150px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-            font-family: var(--font-sans);
-            font-size: 1rem;
-            color: var(--text-primary);
-            resize: vertical;
-            transition: all 0.3s;
-        }
-        .dictation-textarea::placeholder { color: var(--text-muted); }
-        .dictation-textarea:focus {
-            outline: none;
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
-        }
-        .dictation-textarea.listening {
-            background: var(--red-dark);
-            border-color: var(--red-border);
-        }
-        
-        /* Demographics Pills */
-        .demographics-bar {
-            display: none;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-            animation: fadeInUp 0.3s ease-out;
-        }
-        .demographics-bar.visible { display: block; }
-        .demographics-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .demographics-title {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--teal);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .demographics-hint {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            color: var(--text-muted);
-        }
-        .demographics-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .demo-pill {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .demo-pill:hover {
-            border-color: var(--border-focus);
-            background: var(--bg-hover);
-        }
-        .demo-pill-label {
-            font-family: var(--font-mono);
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .demo-pill-value {
-            font-size: 0.85rem;
-            color: var(--text-primary);
-        }
-        .demo-pill-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--green);
-        }
-        .demo-pill-dot.medium { background: var(--amber); }
-        .demo-pill-dot.low { background: var(--red); }
-        .demo-pill input, .demo-pill select {
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-size: 0.85rem;
-            font-family: var(--font-sans);
-            width: 90px;
-            outline: none;
-        }
-        .demo-pill select { cursor: pointer; width: 100px; }
-        .demo-pill select option { background: var(--bg-card); }
-        
-        /* Action Buttons */
-        .actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .btn {
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-family: var(--font-sans);
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
-            color: var(--bg-deepest);
-            box-shadow: 0 4px 15px var(--teal-glow);
-        }
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px var(--teal-glow);
-        }
-        .btn-primary:disabled {
-            background: linear-gradient(135deg, var(--blue-dark), #152535);
-            color: var(--blue);
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-        }
-        .btn-secondary:hover {
-            border-color: var(--border-focus);
-            color: var(--text-primary);
-        }
-        .btn-dashed {
-            background: transparent;
-            border: 1px dashed var(--border);
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-        }
-        .btn-dashed:hover {
-            border-color: var(--text-muted);
-            color: var(--text-secondary);
-        }
-        .btn-danger {
-            background: var(--red-dark);
-            border: 1px solid var(--red-border);
-            color: var(--red);
-        }
-        .btn-danger:hover { background: #3d1a1a; }
-        .btn-sm { padding: 8px 16px; font-size: 0.8rem; }
-        .btn-copy.copied {
-            background: var(--teal);
-            border-color: var(--teal);
-            color: var(--bg-deepest);
-        }
-        
-        /* Workflow Indicator */
-        .workflow {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            padding: 12px;
-            background: var(--bg-card);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .workflow-step {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            color: var(--text-muted);
-        }
-        .workflow-step.active {
-            background: var(--bg-hover);
-            color: var(--text-secondary);
-        }
-        .workflow-step.done { color: var(--teal); }
-        .workflow-arrow {
-            color: var(--text-faint);
-            font-size: 0.6rem;
-        }
-        
-        /* SOAP Output */
-        .soap-card {
-            display: none;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            animation: fadeInUp 0.3s ease-out;
-        }
-        .soap-card.visible { display: block; }
-        .soap-toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .soap-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .soap-meta-tag {
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            padding: 4px 8px;
-            background: var(--bg-hover);
-            border-radius: 4px;
-            color: var(--text-secondary);
-        }
-        .soap-actions { display: flex; gap: 8px; }
-        .soap-content { padding: 20px; }
-        .soap-label-input {
-            width: 100%;
-            padding: 10px 16px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-family: var(--font-sans);
-            margin-bottom: 16px;
-        }
-        .soap-label-input::placeholder { color: var(--text-muted); }
-        .soap-label-input:focus {
-            outline: none;
-            border-color: var(--border-focus);
-        }
-        .soap-output {
-            font-family: var(--font-sans);
-            line-height: 1.7;
-            white-space: pre-wrap;
-        }
-        .soap-output .section-header {
-            display: block;
-            background: linear-gradient(90deg, var(--bg-input), transparent);
-            border-left: 3px solid var(--teal);
-            padding: 8px 12px;
-            margin: 20px 0 12px 0;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--teal);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .soap-output .section-header:first-child { margin-top: 0; }
-        .soap-output .verify-tag {
-            background: var(--amber-dark);
-            border-left: 3px solid var(--amber);
-            color: var(--amber);
-            padding: 2px 6px;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-        }
-        
-        /* Auth Screens */
+        /* Auth */
         .auth-container {
             min-height: 100vh;
             display: flex;
@@ -600,32 +42,34 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 32px;
-            animation: fadeInUp 0.4s ease-out;
         }
         .auth-logo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            text-align: center;
             margin-bottom: 32px;
         }
-        .auth-logo .logo-mark {
+        .logo-mark {
+            display: inline-flex;
             width: 56px;
             height: 56px;
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+            border-radius: 12px;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Mono', monospace;
             font-size: 28px;
+            color: white;
             margin-bottom: 12px;
         }
         .auth-logo h1 {
-            font-family: var(--font-display);
+            font-family: 'Playfair Display', serif;
             font-size: 2rem;
-            color: var(--text-primary);
         }
         .auth-logo .subtitle {
-            font-family: var(--font-mono);
+            font-family: 'DM Mono', monospace;
             font-size: 0.7rem;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 4px;
         }
         .auth-tabs {
             display: flex;
@@ -637,15 +81,12 @@
             padding: 12px;
             background: none;
             border: none;
-            font-family: var(--font-sans);
-            font-size: 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
             color: var(--text-muted);
             cursor: pointer;
             border-bottom: 2px solid transparent;
-            margin-bottom: -1px;
-            transition: all 0.2s;
         }
-        .auth-tab:hover { color: var(--text-secondary); }
         .auth-tab.active {
             color: var(--text-primary);
             border-bottom-color: var(--teal);
@@ -655,11 +96,10 @@
         .form-group { margin-bottom: 20px; }
         .form-group label {
             display: block;
-            font-family: var(--font-mono);
+            font-family: 'DM Mono', monospace;
             font-size: 0.75rem;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             margin-bottom: 8px;
         }
         .form-input {
@@ -669,839 +109,591 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text-primary);
-            font-family: var(--font-sans);
             font-size: 1rem;
-            transition: all 0.2s;
         }
-        .form-input::placeholder { color: var(--text-muted); }
         .form-input:focus {
             outline: none;
             border-color: var(--teal);
-            box-shadow: 0 0 0 3px var(--teal-glow);
         }
-        .verify-code-input {
-            text-align: center;
-            font-family: var(--font-mono);
-            font-size: 1.8rem;
-            letter-spacing: 8px;
-            padding: 16px;
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+            color: #0a1520;
         }
         .auth-error {
             display: none;
-            padding: 12px 16px;
-            background: var(--red-dark);
+            padding: 12px;
+            background: rgba(231, 76, 60, 0.1);
             border-left: 3px solid var(--red);
-            border-radius: 4px;
             color: var(--red);
-            font-size: 0.875rem;
             margin-bottom: 20px;
+            border-radius: 4px;
         }
         .auth-error.visible { display: block; }
         .auth-footer {
             text-align: center;
             margin-top: 20px;
-            font-size: 0.875rem;
             color: var(--text-muted);
         }
-        .auth-footer a {
-            color: var(--teal);
-            text-decoration: none;
-        }
-        .auth-footer a:hover { text-decoration: underline; }
+        .auth-footer a { color: var(--teal); text-decoration: none; }
         
-        /* Notes List */
-        .notes-container { animation: fadeInUp 0.3s ease-out; }
-        .date-group { margin-bottom: 24px; }
-        .date-group-header {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            padding-left: 4px;
+        /* Main App */
+        .header {
+            background: linear-gradient(180deg, #12232f, var(--bg-deepest));
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
         }
-        .note-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .note-card:hover {
-            border-color: var(--border-focus);
-            background: var(--bg-hover);
-        }
-        .note-card.expanded { border-color: var(--teal); }
-        .note-header {
+        .header-inner {
+            max-width: 900px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
+            align-items: center;
         }
-        .note-time {
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            color: var(--text-muted);
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo .logo-mark { width: 40px; height: 40px; font-size: 20px; border-radius: 10px; }
+        .logo h1 { font-family: 'Playfair Display', serif; font-size: 1.5rem; }
+        .user-info { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--text-muted); }
+        .btn-logout { background: none; border: none; color: var(--text-muted); cursor: pointer; margin-left: 16px; }
+        
+        .tabs {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
         }
-        .note-pills {
+        .tabs-inner {
+            max-width: 900px;
+            margin: 0 auto;
             display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
         }
-        .note-pill {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            padding: 3px 8px;
+        .tab {
+            padding: 14px 24px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active { color: var(--text-primary); border-bottom-color: var(--teal); }
+        
+        .main-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .mic-section { text-align: center; padding: 20px 0; }
+        .mic-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
             background: var(--bg-input);
-            border-radius: 4px;
-            color: var(--text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .note-title {
-            font-weight: 500;
+        .mic-btn svg { width: 32px; height: 32px; fill: var(--text-secondary); }
+        .mic-btn.recording { background: rgba(231,76,60,0.2); border-color: var(--red); }
+        .mic-btn.recording svg { fill: var(--red); }
+        .mic-hint { margin-top: 12px; font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--text-muted); }
+        
+        .dictation-textarea {
+            width: 100%;
+            min-height: 150px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
             color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-        .note-complaint {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-        .note-content {
-            display: none;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
-        }
-        .note-card.expanded .note-content { display: block; }
-        .note-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-        .empty-state svg {
-            width: 64px;
-            height: 64px;
-            fill: var(--text-faint);
+            font-size: 1rem;
+            resize: vertical;
             margin-bottom: 16px;
         }
-        .empty-state p { margin-bottom: 8px; }
+        .dictation-textarea:focus { outline: none; border-color: var(--teal); }
         
-        /* Loading */
+        .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn-secondary { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-secondary); width: auto; }
+        .btn-sm { padding: 10px 20px; }
+        
+        .soap-card { display: none; margin-top: 20px; }
+        .soap-card.visible { display: block; }
+        .soap-output { white-space: pre-wrap; line-height: 1.7; }
+        .soap-output strong { color: var(--teal); }
+        
         .spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border: 2px solid var(--border);
             border-top-color: var(--teal);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-state {
-            text-align: center;
-            padding: 40px;
-        }
         
-        /* Utilities */
-        .hidden { display: none !important; }
-        
-        /* Mobile */
-        @media (max-width: 600px) {
-            .header-inner { flex-wrap: wrap; gap: 12px; }
-            .status-badge { order: 3; width: 100%; justify-content: center; }
-            .actions { flex-direction: column; }
-            .actions .btn { width: 100%; }
-            .soap-toolbar { flex-direction: column; align-items: stretch; }
-            .soap-actions { justify-content: flex-end; }
-            .workflow { gap: 2px; }
-            .workflow-step { padding: 4px 6px; font-size: 0.6rem; }
+        .notes-list { display: flex; flex-direction: column; gap: 12px; }
+        .note-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
         }
+        .note-card:hover { border-color: var(--teal); }
+        .note-title { font-weight: 500; margin-bottom: 4px; }
+        .note-meta { font-size: 0.8rem; color: var(--text-muted); }
+        .note-content { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .note-card.expanded .note-content { display: block; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
     </style>
 </head>
 <body>
-    <div id="app">
-        <!-- Auth Screen -->
-        <div id="auth-screen" class="auth-container">
-            <div class="auth-card">
-                <div class="auth-logo">
-                    <div class="logo-mark">S</div>
-                    <h1>Scribe</h1>
-                    <div class="subtitle">Voice → SOAP Notes</div>
-                </div>
-                
-                <div id="auth-error" class="auth-error"></div>
-                
-                <div class="auth-tabs" id="auth-tabs-container">
-                    <button class="auth-tab active" data-form="login">Sign In</button>
-                    <button class="auth-tab" data-form="register">Register</button>
-                </div>
-                
-                <form id="login-form" class="auth-form active">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="login-email" class="form-input" required autocomplete="email">
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="login-password" class="form-input" required autocomplete="current-password">
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width:100%">Sign In</button>
-                </form>
-                
-                <form id="register-form" class="auth-form">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="register-name" class="form-input" required autocomplete="name">
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="register-email" class="form-input" required autocomplete="email">
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="register-password" class="form-input" required minlength="8" autocomplete="new-password">
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width:100%">Create Account</button>
-                </form>
-                
-                <div id="verify-form" class="auth-form">
-                    <p style="text-align:center; color:var(--text-secondary); margin-bottom:20px;">
-                        Enter the 6-digit code sent to<br><strong id="verify-email-display"></strong>
-                    </p>
-                    <div class="form-group">
-                        <input type="text" id="verify-code" class="form-input verify-code-input" maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code" placeholder="000000">
-                    </div>
-                    <button type="button" id="verify-btn" class="btn btn-primary" style="width:100%">Verify Email</button>
-                    <p class="auth-footer"><a href="#" id="back-to-register">Back to Register</a></p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Main App -->
-        <div id="main-app" class="hidden">
-            <header class="header">
-                <div class="container">
-                    <div class="header-inner">
-                        <div class="logo">
-                            <div class="logo-mark">S</div>
-                            <div class="logo-text">
-                                <h1>Scribe</h1>
-                                <div class="subtitle">Voice → SOAP Notes</div>
-                            </div>
-                        </div>
-                        <div class="status-badge" id="status-badge">
-                            <span class="status-dot"></span>
-                            <span id="status-text">Ready</span>
-                        </div>
-                        <div class="header-right">
-                            <span class="user-info" id="user-name"></span>
-                            <button class="btn-logout" id="logout-btn">Logout</button>
-                        </div>
-                    </div>
-                </div>
-            </header>
-            
-            <div class="tabs">
-                <div class="container" style="display:flex; padding:0;">
-                    <button class="tab active" data-tab="new">New Note</button>
-                    <button class="tab" data-tab="notes">My Notes <span class="tab-badge hidden" id="soap-ready-badge">Ready</span></button>
-                </div>
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <div class="logo-mark">S</div>
+                <h1>Scribe</h1>
+                <div class="subtitle">Voice to SOAP Notes</div>
             </div>
             
-            <div class="main-content">
-                <div class="container">
-                    <!-- New Note Tab -->
-                    <div id="tab-new" class="tab-content active">
-                        <div class="mic-section">
-                            <button class="mic-btn" id="mic-btn">
-                                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-                            </button>
-                            <div class="mic-hint" id="mic-hint">Tap to speak</div>
-                            <div class="wave-bars" id="wave-bars">
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="dictation-card">
-                            <div class="dictation-header">
-                                <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);">DICTATION</span>
-                                <span class="word-count" id="word-count">0 words</span>
-                            </div>
-                            <textarea id="dictation" class="dictation-textarea" placeholder="Speak or type your clinical notes here..."></textarea>
-                        </div>
-                        
-                        <div class="demographics-bar" id="demographics-bar">
-                            <div class="demographics-header">
-                                <div class="demographics-title">✓ Auto-Detected</div>
-                                <div class="demographics-hint">Click to override</div>
-                            </div>
-                            <div class="demographics-pills" id="demographics-pills"></div>
-                        </div>
-                        
-                        <div class="actions">
-                            <button class="btn btn-dashed" id="sample-btn">Load Sample</button>
-                            <button class="btn btn-secondary" id="clear-btn">Clear All</button>
-                            <button class="btn btn-primary" id="generate-btn" disabled style="margin-left:auto;">Generate SOAP Note</button>
-                        </div>
-                        
-                        <div class="workflow" id="workflow">
-                            <div class="workflow-step active" data-step="dictate">🎤 Dictate</div>
-                            <span class="workflow-arrow">→</span>
-                            <div class="workflow-step" data-step="detect">🔍 Detect</div>
-                            <span class="workflow-arrow">→</span>
-                            <div class="workflow-step" data-step="process">⚙️ Process</div>
-                            <span class="workflow-arrow">→</span>
-                            <div class="workflow-step" data-step="copy">📋 Copy</div>
-                        </div>
-                        
-                        <div class="soap-card" id="soap-card">
-                            <div class="soap-toolbar">
-                                <div class="soap-meta" id="soap-meta"></div>
-                                <div class="soap-actions">
-                                    <button class="btn btn-secondary btn-sm" id="edit-soap-btn">Edit</button>
-                                    <button class="btn btn-secondary btn-sm btn-copy" id="copy-btn">Copy to Clipboard</button>
-                                    <button class="btn btn-primary btn-sm" id="save-btn">Save Note</button>
-                                </div>
-                            </div>
-                            <div class="soap-content">
-                                <input type="text" id="note-label" class="soap-label-input" placeholder="Note label (optional, e.g., Patient initials)">
-                                <div class="soap-output" id="soap-output"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- My Notes Tab -->
-                    <div id="tab-notes" class="tab-content">
-                        <div id="notes-loading" class="loading-state">
-                            <div class="spinner"></div>
-                        </div>
-                        <div id="notes-empty" class="empty-state hidden">
-                            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-                            <p>No notes yet</p>
-                            <p style="font-size:0.875rem;">Create your first note in the New Note tab</p>
-                        </div>
-                        <div id="notes-list" class="notes-container"></div>
-                    </div>
+            <div id="auth-error" class="auth-error"></div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-form="login">Sign In</button>
+                <button class="auth-tab" data-form="register">Register</button>
+            </div>
+            
+            <form id="login-form" class="auth-form active">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" class="form-input" required>
                 </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </form>
+            
+            <form id="register-form" class="auth-form">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="register-name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="register-email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Password (min 8 chars)</label>
+                    <input type="password" id="register-password" class="form-input" required minlength="8">
+                </div>
+                <button type="submit" class="btn btn-primary">Create Account</button>
+            </form>
+            
+            <div id="verify-form" class="auth-form">
+                <p style="text-align:center;color:var(--text-secondary);margin-bottom:20px;">
+                    Enter the 6-digit code sent to<br><strong id="verify-email-display"></strong>
+                </p>
+                <div class="form-group">
+                    <label>Code</label>
+                    <input type="text" id="verify-code" class="form-input" maxlength="6" style="text-align:center;font-size:1.5rem;letter-spacing:8px;">
+                </div>
+                <button type="button" id="verify-btn" class="btn btn-primary">Verify</button>
             </div>
         </div>
     </div>
-    
-    <script>
-        // State
-        let currentUser = null;
-        let pendingEmail = null;
-        let notes = [];
-        let expandedNoteId = null;
-        let recognition = null;
-        let isRecording = false;
-        let demographics = { gender: null, age: null, visitType: null, specialty: null, chiefComplaint: null, confidence: 0 };
+
+    <!-- Main App -->
+    <div id="main-app" class="hidden">
+        <header class="header">
+            <div class="header-inner">
+                <div class="logo">
+                    <div class="logo-mark">S</div>
+                    <h1>Scribe</h1>
+                </div>
+                <div>
+                    <span class="user-info" id="user-name"></span>
+                    <button class="btn-logout" id="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
         
-        // Elements
-        const authScreen = document.getElementById("auth-screen");
-        const mainApp = document.getElementById("main-app");
+        <div class="tabs">
+            <div class="tabs-inner">
+                <button class="tab active" data-tab="new">New Note</button>
+                <button class="tab" data-tab="notes">My Notes</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div id="tab-new" class="tab-content active">
+                <div class="card">
+                    <div class="mic-section">
+                        <button class="mic-btn" id="mic-btn">
+                            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+                        </button>
+                        <div class="mic-hint" id="mic-hint">Tap to speak</div>
+                    </div>
+                    <textarea id="dictation" class="dictation-textarea" placeholder="Speak or type your clinical notes here..."></textarea>
+                    <div class="actions">
+                        <button class="btn btn-secondary btn-sm" id="sample-btn">Load Sample</button>
+                        <button class="btn btn-secondary btn-sm" id="clear-btn">Clear</button>
+                        <button class="btn btn-primary btn-sm" id="generate-btn" style="margin-left:auto;">Generate SOAP</button>
+                    </div>
+                </div>
+                
+                <div class="card soap-card" id="soap-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <strong>SOAP Note</strong>
+                        <div>
+                            <button class="btn btn-secondary btn-sm" id="copy-btn">Copy</button>
+                            <button class="btn btn-primary btn-sm" id="save-btn" style="margin-left:8px;">Save</button>
+                        </div>
+                    </div>
+                    <input type="text" id="note-label" class="form-input" placeholder="Note label (optional)" style="margin-bottom:16px;">
+                    <div class="soap-output" id="soap-output"></div>
+                </div>
+            </div>
+            
+            <div id="tab-notes" class="tab-content">
+                <div id="notes-loading" class="empty-state"><div class="spinner"></div></div>
+                <div id="notes-empty" class="empty-state hidden">No notes yet</div>
+                <div id="notes-list" class="notes-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        var currentUser = null;
+        var pendingEmail = null;
+        var notes = [];
         
         // API helper
-        async function api(endpoint, options = {}) {
-            const res = await fetch(endpoint, {
-                ...options,
-                headers: { "Content-Type": "application/json", ...options.headers },
-                credentials: "same-origin"
+        function api(endpoint, options) {
+            options = options || {};
+            return fetch(endpoint, {
+                method: options.method || 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                body: options.body,
+                credentials: 'same-origin'
+            }).then(function(res) {
+                return res.json().then(function(data) {
+                    if (!res.ok) throw new Error(data.detail || 'Request failed');
+                    return data;
+                });
             });
-            if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                throw new Error(data.detail || "Request failed");
-            }
-            return res.json();
         }
         
-        // Auth tab switching
-        document.querySelectorAll(".auth-tab").forEach(tab => {
-            tab.addEventListener("click", () => {
-                document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
-                document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
-                tab.classList.add("active");
-                document.getElementById(tab.dataset.form + "-form").classList.add("active");
-                hideAuthError();
+        // Show/hide screens
+        function showAuth() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+        }
+        function showApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+        }
+        function showError(msg) {
+            var el = document.getElementById('auth-error');
+            el.textContent = msg;
+            el.classList.add('visible');
+        }
+        function hideError() {
+            document.getElementById('auth-error').classList.remove('visible');
+        }
+        
+        // Auth tabs
+        document.querySelectorAll('.auth-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.auth-tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.auth-form').forEach(function(f) { f.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.form + '-form').classList.add('active');
+                hideError();
             });
         });
         
-        function showAuthError(msg) {
-            const el = document.getElementById("auth-error");
-            el.textContent = msg;
-            el.classList.add("visible");
-        }
-        function hideAuthError() {
-            document.getElementById("auth-error").classList.remove("visible");
-        }
-        
-        function showVerifyForm() {
-            document.getElementById("auth-tabs-container").classList.add("hidden");
-            document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
-            document.getElementById("verify-form").classList.add("active");
-        }
-        
-        // Check auth
-        async function checkAuth() {
-            try {
-                const user = await api("/api/auth/me");
-                currentUser = user;
-                document.getElementById("user-name").textContent = user.name;
-                 authScreen.classList.add("hidden");
-                mainApp.classList.remove("hidden");
-            } catch (e) {
-                authScreen.classList.remove("hidden");
-                mainApp.classList.add("hidden");
-            }
-        }
+        // Check auth on load
+        api('/api/auth/me').then(function(user) {
+            currentUser = user;
+            document.getElementById('user-name').textContent = user.name;
+            showApp();
+        }).catch(function() {
+            showAuth();
+        });
         
         // Login
-        document.getElementById("login-form").addEventListener("submit", async (e) => {
+        document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            hideAuthError();
-            try {
-                const data = await api("/api/auth/login", {
-                    method: "POST",
-                    body: JSON.stringify({
-                        email: document.getElementById("login-email").value,
-                        password: document.getElementById("login-password").value
-                    })
-                });
+            hideError();
+            api('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: document.getElementById('login-email').value,
+                    password: document.getElementById('login-password').value
+                })
+            }).then(function(data) {
                 currentUser = data.user;
-                document.getElementById("user-name").textContent = data.user.name;
-                 authScreen.classList.add("hidden");
-                mainApp.classList.remove("hidden");
-            } catch (err) {
-                showAuthError(err.message);
-            }
+                document.getElementById('user-name').textContent = data.user.name;
+                showApp();
+            }).catch(function(err) {
+                showError(err.message);
+            });
         });
         
         // Register
-        document.getElementById("register-form").addEventListener("submit", async (e) => {
+        document.getElementById('register-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            hideAuthError();
-            const email = document.getElementById("register-email").value;
-            try {
-                await api("/api/auth/register", {
-                    method: "POST",
-                    body: JSON.stringify({
-                        name: document.getElementById("register-name").value,
-                        email: email,
-                        password: document.getElementById("register-password").value
-                    })
-                });
+            hideError();
+            var email = document.getElementById('register-email').value;
+            api('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: document.getElementById('register-name').value,
+                    email: email,
+                    password: document.getElementById('register-password').value
+                })
+            }).then(function() {
                 pendingEmail = email;
-                document.getElementById("verify-email-display").textContent = email;
-                showVerifyForm();
-            } catch (err) {
-                showAuthError(err.message);
-            }
+                document.getElementById('verify-email-display').textContent = email;
+                document.querySelectorAll('.auth-form').forEach(function(f) { f.classList.remove('active'); });
+                document.getElementById('verify-form').classList.add('active');
+                document.querySelectorAll('.auth-tab').forEach(function(t) { t.classList.remove('active'); });
+            }).catch(function(err) {
+                showError(err.message);
+            });
         });
         
         // Verify
-        document.getElementById("verify-btn").addEventListener("click", async () => {
-            hideAuthError();
-            try {
-                await api("/api/auth/verify", {
-                    method: "POST",
-                    body: JSON.stringify({ email: pendingEmail, code: document.getElementById("verify-code").value })
-                });
-                checkAuth();
-            } catch (err) {
-                showAuthError(err.message);
-            }
-        });
-        
-        document.getElementById("back-to-register").addEventListener("click", (e) => {
-            e.preventDefault();
-            document.getElementById("auth-tabs-container").classList.remove("hidden");
-            document.querySelectorAll(".auth-tab")[1].click();
+        document.getElementById('verify-btn').addEventListener('click', function() {
+            hideError();
+            api('/api/auth/verify', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: pendingEmail,
+                    code: document.getElementById('verify-code').value
+                })
+            }).then(function() {
+                location.reload();
+            }).catch(function(err) {
+                showError(err.message);
+            });
         });
         
         // Logout
-        document.getElementById("logout-btn").addEventListener("click", async () => {
-            await api("/api/auth/logout", { method: "POST" });
-            currentUser = null;
-            authScreen.classList.remove("hidden");
-            mainApp.classList.add("hidden");
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            api('/api/auth/logout', { method: 'POST' }).then(function() {
+                location.reload();
+            });
         });
         
         // Main tabs
-        document.querySelectorAll(".tab").forEach(tab => {
-            tab.addEventListener("click", () => {
-                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-                document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-                tab.classList.add("active");
-                document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
-                if (tab.dataset.tab === "notes") loadNotes();
+        document.querySelectorAll('.tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+                if (tab.dataset.tab === 'notes') loadNotes();
             });
-        });
-        
-        // Status badge
-        function setStatus(status, text) {
-            const badge = document.getElementById("status-badge");
-            badge.className = "status-badge " + status;
-            document.getElementById("status-text").textContent = text;
-        }
-        
-        // Workflow
-        function setWorkflowStep(step) {
-            document.querySelectorAll(".workflow-step").forEach(s => {
-                s.classList.remove("active", "done");
-                const steps = ["dictate", "detect", "process", "copy"];
-                const currentIdx = steps.indexOf(step);
-                const thisIdx = steps.indexOf(s.dataset.step);
-                if (thisIdx < currentIdx) s.classList.add("done");
-                if (thisIdx === currentIdx) s.classList.add("active");
-            });
-        }
-        
-        // Word count
-        document.getElementById("dictation").addEventListener("input", () => {
-            const text = document.getElementById("dictation").value.trim();
-            const words = text ? text.split(/\s+/).length : 0;
-            document.getElementById("word-count").textContent = words + " word" + (words !== 1 ? "s" : "");
-            document.getElementById("generate-btn").disabled = words < 5;
-            if (words >= 5) setWorkflowStep("detect");
-            else setWorkflowStep("dictate");
         });
         
         // Speech recognition
-        function initSpeechRecognition() {
-            if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
-                document.getElementById("mic-hint").textContent = "Speech not supported";
-                document.getElementById("mic-btn").disabled = true;
-                return;
-            }
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
+        var recognition = null;
+        var isRecording = false;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SR();
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.lang = "en-US";
-            let finalTranscript = "";
-            
-            recognition.onstart = () => {
-                finalTranscript = document.getElementById("dictation").value;
-            };
-            
-            recognition.onresult = (event) => {
-                let interim = "";
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript + " ";
-                    } else {
-                        interim += event.results[i][0].transcript;
-                    }
+            recognition.onresult = function(e) {
+                var transcript = '';
+                for (var i = 0; i < e.results.length; i++) {
+                    transcript += e.results[i][0].transcript;
                 }
-                document.getElementById("dictation").value = finalTranscript + interim;
-                document.getElementById("dictation").dispatchEvent(new Event("input"));
+                document.getElementById('dictation').value = transcript;
             };
-            recognition.onerror = () => stopRecording();
-            recognition.onend = () => { if (isRecording) recognition.start(); };
+            recognition.onerror = function() { stopRecording(); };
+            recognition.onend = function() { if (isRecording) recognition.start(); };
         }
         
         function startRecording() {
             if (!recognition) return;
             isRecording = true;
             recognition.start();
-            document.getElementById("mic-btn").classList.add("recording");
-            document.getElementById("dictation").classList.add("listening");
-            document.getElementById("mic-hint").textContent = "Tap to stop";
-            document.getElementById("wave-bars").classList.add("active");
-            setStatus("listening", "Listening");
+            document.getElementById('mic-btn').classList.add('recording');
+            document.getElementById('mic-hint').textContent = 'Tap to stop';
         }
-        
         function stopRecording() {
             isRecording = false;
             if (recognition) recognition.stop();
-            document.getElementById("mic-btn").classList.remove("recording");
-            document.getElementById("dictation").classList.remove("listening");
-            document.getElementById("mic-hint").textContent = "Tap to speak";
-            document.getElementById("wave-bars").classList.remove("active");
-            setStatus("", "Ready");
+            document.getElementById('mic-btn').classList.remove('recording');
+            document.getElementById('mic-hint').textContent = 'Tap to speak';
         }
         
-        document.getElementById("mic-btn").addEventListener("click", () => {
+        document.getElementById('mic-btn').addEventListener('click', function() {
             if (isRecording) stopRecording(); else startRecording();
         });
         
-        // Sample dictation
-        document.getElementById("sample-btn").addEventListener("click", () => {
-            document.getElementById("dictation").value = "This is a 45-year-old male presenting with chest pain for the past 3 hours. Patient describes the pain as pressure-like, radiating to the left arm. Associated symptoms include shortness of breath and diaphoresis. No prior history of cardiac disease. Currently takes lisinopril for hypertension. Vital signs: BP 150/90, HR 88, RR 18, O2 sat 97% on room air. Physical exam reveals regular heart rhythm, no murmurs, lungs clear bilaterally. EKG shows ST elevation in leads V1-V4. Assessment: Acute STEMI. Plan: Activate cath lab, aspirin 325mg, heparin drip, cardiology consult.";
-            document.getElementById("dictation").dispatchEvent(new Event("input"));
+        // Sample
+        document.getElementById('sample-btn').addEventListener('click', function() {
+            document.getElementById('dictation').value = '45 year old male presenting with chest pain for 3 hours. Pain is pressure-like, radiating to left arm. Associated shortness of breath. No prior cardiac history. Takes lisinopril for hypertension. Vitals: BP 150/90, HR 88, RR 18. Heart regular, lungs clear. EKG shows ST elevation V1-V4. Assessment: Acute STEMI. Plan: Activate cath lab, aspirin, heparin, cardiology consult.';
         });
         
-        // Clear all
-        document.getElementById("clear-btn").addEventListener("click", () => {
-            document.getElementById("dictation").value = "";
-            document.getElementById("dictation").dispatchEvent(new Event("input"));
-            document.getElementById("demographics-bar").classList.remove("visible");
-            document.getElementById("soap-card").classList.remove("visible");
-            document.getElementById("soap-ready-badge").classList.add("hidden");
-            demographics = { gender: null, age: null, visitType: null, specialty: null, chiefComplaint: null, confidence: 0 };
-            setWorkflowStep("dictate");
-            setStatus("", "Ready");
+        // Clear
+        document.getElementById('clear-btn').addEventListener('click', function() {
+            document.getElementById('dictation').value = '';
+            document.getElementById('soap-card').classList.remove('visible');
         });
         
-        // Generate SOAP
-        document.getElementById("generate-btn").addEventListener("click", async () => {
-            const dictation = document.getElementById("dictation").value.trim();
-            if (\!dictation) return;
+        // Generate
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            var dictation = document.getElementById('dictation').value.trim();
+            if (!dictation) return alert('Please enter some dictation first');
             
-            const btn = document.getElementById("generate-btn");
+            var btn = document.getElementById('generate-btn');
             btn.disabled = true;
-            btn.innerHTML = "<span class=\"spinner\"></span> Generating...";
-            setStatus("processing", "Processing");
-            setWorkflowStep("detect");
+            btn.textContent = 'Generating...';
             
-            try {
-                // Extract demographics
-                const extractData = await api("/api/generate/extract", {
-                    method: "POST",
-                    body: JSON.stringify({ dictation })
-                });
-                demographics = extractData;
-                renderDemographics();
-                setWorkflowStep("process");
-                
-                // Generate SOAP
-                const soapData = await api("/api/generate/soap", {
-                    method: "POST",
-                    body: JSON.stringify({
-                        dictation,
-                        gender: demographics.gender,
-                        age: demographics.age,
-                        visitType: demographics.visitType,
-                        specialty: demographics.specialty,
-                        chiefComplaint: demographics.chiefComplaint
-                    })
-                });
-                
-                renderSOAP(soapData.soap_note);
-                setWorkflowStep("copy");
-                setStatus("done", "Done");
-                document.getElementById("soap-ready-badge").classList.remove("hidden");
-            } catch (err) {
-                alert("Error: " + err.message);
-                setStatus("", "Ready");
-            } finally {
+            api('/api/generate/soap', {
+                method: 'POST',
+                body: JSON.stringify({ dictation: dictation })
+            }).then(function(data) {
+                var html = data.soap_note
+                    .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN)\*\*/gi, '<strong>$1</strong>')
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                document.getElementById('soap-output').innerHTML = html;
+                document.getElementById('soap-card').classList.add('visible');
+            }).catch(function(err) {
+                alert('Error: ' + err.message);
+            }).finally(function() {
                 btn.disabled = false;
-                btn.textContent = "Generate SOAP Note";
-            }
+                btn.textContent = 'Generate SOAP';
+            });
         });
         
-        function renderDemographics() {
-            const bar = document.getElementById("demographics-bar");
-            const pills = document.getElementById("demographics-pills");
-            pills.innerHTML = "";
+        // Copy
+        document.getElementById('copy-btn').addEventListener('click', function() {
+            var text = document.getElementById('soap-output').innerText;
+            navigator.clipboard.writeText(text);
+            this.textContent = 'Copied!';
+            var self = this;
+            setTimeout(function() { self.textContent = 'Copy'; }, 2000);
+        });
+        
+        // Save
+        document.getElementById('save-btn').addEventListener('click', function() {
+            var btn = this;
+            btn.disabled = true;
+            api('/api/notes', {
+                method: 'POST',
+                body: JSON.stringify({
+                    label: document.getElementById('note-label').value || null,
+                    raw_dictation: document.getElementById('dictation').value,
+                    soap_note: document.getElementById('soap-output').innerText
+                })
+            }).then(function() {
+                btn.textContent = 'Saved!';
+                setTimeout(function() {
+                    document.getElementById('clear-btn').click();
+                    btn.textContent = 'Save';
+                    btn.disabled = false;
+                }, 1500);
+            }).catch(function(err) {
+                alert('Error: ' + err.message);
+                btn.disabled = false;
+            });
+        });
+        
+        // Load notes
+        function loadNotes() {
+            document.getElementById('notes-loading').classList.remove('hidden');
+            document.getElementById('notes-empty').classList.add('hidden');
+            document.getElementById('notes-list').innerHTML = '';
             
-            const fields = [
-                { key: "gender", label: "Gender", type: "select", opts: ["", "Male", "Female"] },
-                { key: "age", label: "Age", type: "text" },
-                { key: "visitType", label: "Visit", type: "select", opts: ["", "New Patient", "Follow-up", "Annual Exam", "Urgent", "Consultation"] },
-                { key: "specialty", label: "Specialty", type: "text" },
-                { key: "chiefComplaint", label: "Complaint", type: "text" }
-            ];
-            
-            fields.forEach(f => {
-                if (\!demographics[f.key]) return;
-                const pill = document.createElement("div");
-                pill.className = "demo-pill";
-                const conf = demographics.confidence || 0.5;
-                const dotClass = conf > 0.7 ? "" : conf > 0.4 ? "medium" : "low";
-                
-                let inner = "<span class=\"demo-pill-label\">" + f.label + "</span>";
-                if (f.type === "select") {
-                    inner += "<select>" + f.opts.map(o => "<option value=\"" + o + "\"" + (o === demographics[f.key] ? " selected" : "") + ">" + (o || "--") + "</option>").join("") + "</select>";
-                } else {
-                    inner += "<input type=\"text\" value=\"" + (demographics[f.key] || "") + "\">";
+            api('/api/notes').then(function(data) {
+                notes = data;
+                document.getElementById('notes-loading').classList.add('hidden');
+                if (notes.length === 0) {
+                    document.getElementById('notes-empty').classList.remove('hidden');
+                    return;
                 }
-                inner += "<span class=\"demo-pill-dot " + dotClass + "\"></span>";
-                pill.innerHTML = inner;
-                
-                const input = pill.querySelector("input, select");
-                input.addEventListener("change", (e) => { demographics[f.key] = e.target.value; });
-                pills.appendChild(pill);
-            });
-            bar.classList.add("visible");
-        }
-        
-        function renderSOAP(text) {
-            const card = document.getElementById("soap-card");
-            const output = document.getElementById("soap-output");
-            const meta = document.getElementById("soap-meta");
-            
-            meta.innerHTML = "";
-            if (demographics.age || demographics.gender) {
-                const tag = document.createElement("span");
-                tag.className = "soap-meta-tag";
-                tag.textContent = (demographics.age || "") + (demographics.gender ? (demographics.age ? " " : "") + demographics.gender.charAt(0) : "");
-                meta.appendChild(tag);
-            }
-            if (demographics.visitType) {
-                const tag = document.createElement("span");
-                tag.className = "soap-meta-tag";
-                tag.textContent = demographics.visitType;
-                meta.appendChild(tag);
-            }
-            if (demographics.specialty) {
-                const tag = document.createElement("span");
-                tag.className = "soap-meta-tag";
-                tag.textContent = demographics.specialty;
-                meta.appendChild(tag);
-            }
-            
-            let html = text
-                .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN)\*\*/gi, "<span class=\"section-header\">$1</span>")
-                .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-                .replace(/\[VERIFY\]/gi, "<span class=\"verify-tag\">[VERIFY]</span>")
-                .replace(/\[MISSING\]/gi, "<span class=\"verify-tag\">[MISSING]</span>")
-                .replace(/^- /gm, "• ");
-            output.innerHTML = html;
-            card.classList.add("visible");
-        }
-        
-        document.getElementById("copy-btn").addEventListener("click", () => {
-            const text = document.getElementById("soap-output").innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                const btn = document.getElementById("copy-btn");
-                btn.classList.add("copied");
-                btn.textContent = "Copied\!";
-                setTimeout(() => { btn.classList.remove("copied"); btn.textContent = "Copy to Clipboard"; }, 2500);
-            });
-        });
-        
-        document.getElementById("save-btn").addEventListener("click", async () => {
-            const btn = document.getElementById("save-btn");
-            btn.disabled = true;
-            btn.innerHTML = "<span class=\"spinner\"></span>";
-            try {
-                await api("/api/notes", {
-                    method: "POST",
-                    body: JSON.stringify({
-                        label: document.getElementById("note-label").value || null,
-                        patient_age: demographics.age || null,
-                        patient_gender: demographics.gender || null,
-                        visit_type: demographics.visitType || null,
-                        specialty: demographics.specialty || null,
-                        chief_complaint: demographics.chiefComplaint || null,
-                        raw_dictation: document.getElementById("dictation").value,
-                        soap_note: document.getElementById("soap-output").innerText
-                    })
+                var html = '';
+                notes.forEach(function(note) {
+                    html += '<div class="note-card" data-id="' + note.id + '">' +
+                        '<div class="note-title">' + (note.label || 'Untitled') + '</div>' +
+                        '<div class="note-meta">' + new Date(note.created_at).toLocaleString() + '</div>' +
+                        '<div class="note-content"></div>' +
+                        '</div>';
                 });
-                btn.textContent = "Saved\!";
-                setTimeout(() => { document.getElementById("clear-btn").click(); btn.textContent = "Save Note"; btn.disabled = false; }, 1500);
-            } catch (err) {
-                alert("Error: " + err.message);
-                btn.textContent = "Save Note";
-                btn.disabled = false;
-            }
-        });
-        
-        async function loadNotes() {
-            const loading = document.getElementById("notes-loading");
-            const empty = document.getElementById("notes-empty");
-            const list = document.getElementById("notes-list");
-            loading.classList.remove("hidden");
-            empty.classList.add("hidden");
-            list.innerHTML = "";
-            
-            try {
-                notes = await api("/api/notes");
-                loading.classList.add("hidden");
-                if (notes.length === 0) { empty.classList.remove("hidden"); return; }
-                renderNotes();
-            } catch (err) {
-                loading.classList.add("hidden");
-                list.innerHTML = "<p style=\"text-align:center;color:var(--red)\">Error loading notes</p>";
-            }
-        }
-        
-        function renderNotes() {
-            const list = document.getElementById("notes-list");
-            list.innerHTML = "";
-            const groups = {};
-            const today = new Date().toDateString();
-            const yesterday = new Date(Date.now() - 86400000).toDateString();
-            
-            notes.forEach(note => {
-                const d = new Date(note.created_at);
-                const ds = d.toDateString();
-                let label = ds === today ? "Today" : ds === yesterday ? "Yesterday" : d.toLocaleDateString();
-                if (!groups[label]) groups[label] = [];
-                groups[label].push(note);
-            });
-            
-            Object.entries(groups).forEach(([date, dateNotes]) => {
-                const group = document.createElement("div");
-                group.className = "date-group";
-                group.innerHTML = "<div class=\"date-group-header\">" + date + "</div>";
-                
-                dateNotes.forEach(note => {
-                    const card = document.createElement("div");
-                    card.className = "note-card" + (expandedNoteId === note.id ? " expanded" : "");
-                    card.innerHTML = "<div class=\"note-header\"><span class=\"note-time\">" + new Date(note.created_at).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}) + "</span><div class=\"note-pills\"></div></div><div class=\"note-title\">" + (note.label || "Untitled Note") + "</div>" + (note.chief_complaint ? "<div class=\"note-complaint\">" + note.chief_complaint + "</div>" : "") + "<div class=\"note-content\"><div class=\"note-soap\"></div><div class=\"note-actions\"><button class=\"btn btn-secondary btn-sm btn-copy\">Copy</button><button class=\"btn btn-danger btn-sm\">Delete</button></div></div>";
-                    card.addEventListener("click", (e) => { if (!e.target.closest("button")) toggleNote(note.id, card); });
-                    group.appendChild(card);
-                });
-                list.appendChild(group);
+                document.getElementById('notes-list').innerHTML = html;
+            }).catch(function() {
+                document.getElementById('notes-loading').classList.add('hidden');
             });
         }
         
-        async function toggleNote(id, el) {
-            if (expandedNoteId === id) {
-                expandedNoteId = null;
-                el.classList.remove("expanded");
+        // Click note to expand
+        document.getElementById('notes-list').addEventListener('click', function(e) {
+            var card = e.target.closest('.note-card');
+            if (!card) return;
+            
+            var id = card.dataset.id;
+            var content = card.querySelector('.note-content');
+            
+            if (card.classList.contains('expanded')) {
+                card.classList.remove('expanded');
                 return;
             }
-            document.querySelectorAll(".note-card.expanded").forEach(c => c.classList.remove("expanded"));
-            expandedNoteId = id;
-            el.classList.add("expanded");
-            const soapEl = el.querySelector(".note-soap");
-            soapEl.innerHTML = "<div class=\"spinner\"></div>";
             
-            try {
-                const note = await api("/api/notes/" + id);
-                let html = (note.soap_note || "No content")
-                    .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN)\*\*/gi, "<span class=\"section-header\">$1</span>")
-                    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-                    .replace(/^- /gm, "• ");
-                soapEl.innerHTML = "<div class=\"soap-output\">" + html + "</div>";
-                
-                el.querySelector(".btn-copy").onclick = (e) => {
-                    e.stopPropagation();
-                    navigator.clipboard.writeText(note.soap_note);
-                    e.target.textContent = "Copied!";
-                    setTimeout(() => e.target.textContent = "Copy", 2000);
-                };
-                el.querySelector(".btn-danger").onclick = async (e) => {
-                    e.stopPropagation();
-                    if (!confirm("Delete this note?")) return;
-                    await api("/api/notes/" + id, { method: "DELETE" });
-                    notes = notes.filter(n => n.id !== id);
-                    expandedNoteId = null;
-                    renderNotes();
-                    if (notes.length === 0) document.getElementById("notes-empty").classList.remove("hidden");
-                };
-            } catch (err) {
-                soapEl.innerHTML = "<p style=\"color:var(--red)\">Error loading note</p>";
-            }
-        }
+            document.querySelectorAll('.note-card').forEach(function(c) { c.classList.remove('expanded'); });
+            card.classList.add('expanded');
+            content.innerHTML = '<div class="spinner"></div>';
+            
+            api('/api/notes/' + id).then(function(note) {
+                content.innerHTML = '<div class="soap-output">' + (note.soap_note || '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') + '</div>' +
+                    '<div style="margin-top:16px;"><button class="btn btn-secondary btn-sm" onclick="copyNoteText(this)">Copy</button> ' +
+                    '<button class="btn btn-secondary btn-sm" style="color:var(--red);" onclick="deleteNote(' + id + ')">Delete</button></div>';
+            });
+        });
         
-        // Init
-        initSpeechRecognition();
-        checkAuth();
+        window.copyNoteText = function(btn) {
+            var text = btn.parentElement.previousElementSibling.innerText;
+            navigator.clipboard.writeText(text);
+            btn.textContent = 'Copied!';
+            setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+        };
+        
+        window.deleteNote = function(id) {
+            if (!confirm('Delete this note?')) return;
+            api('/api/notes/' + id, { method: 'DELETE' }).then(function() {
+                loadNotes();
+            });
+        };
+    })();
     </script>
 </body>
 </html>
