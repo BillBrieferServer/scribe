@@ -101,3 +101,78 @@ async def delete_note(note_id: int, request: Request):
         conn.commit()
     
     return {"message": "Note deleted"}
+
+from datetime import datetime, timedelta
+from app.email_service import send_soap_note_email
+
+# Simple in-memory rate limiting
+email_counts = {}  # {user_id: [(timestamp, note_id), ...]}
+
+def check_rate_limit(user_id: int, note_id: int) -> tuple[bool, str]:
+    now = datetime.utcnow()
+    hour_ago = now - timedelta(hours=1)
+    
+    if user_id not in email_counts:
+        email_counts[user_id] = []
+    
+    # Clean old entries
+    email_counts[user_id] = [(ts, nid) for ts, nid in email_counts[user_id] if ts > hour_ago]
+    
+    # Check per-note limit (3 per note)
+    note_emails = sum(1 for ts, nid in email_counts[user_id] if nid == note_id)
+    if note_emails >= 3:
+        return False, "Maximum 3 emails per note reached"
+    
+    # Check per-hour limit (20 per user per hour)
+    if len(email_counts[user_id]) >= 20:
+        return False, "Maximum 20 emails per hour reached"
+    
+    return True, ""
+
+def record_email(user_id: int, note_id: int):
+    if user_id not in email_counts:
+        email_counts[user_id] = []
+    email_counts[user_id].append((datetime.utcnow(), note_id))
+
+@router.post("/{note_id}/email")
+async def email_note(note_id: int, request: Request):
+    user = require_auth(request)
+    
+    # Check rate limits
+    allowed, msg = check_rate_limit(user["id"], note_id)
+    if not allowed:
+        raise HTTPException(status_code=429, detail=msg)
+    
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM notes WHERE id = ? AND user_id = ?", (note_id, user["id"]))
+        row = cursor.fetchone()
+    
+    if not row:
+        raise HTTPException(status_code=404, detail="Note not found")
+    
+    # Build subject line from note metadata
+    parts = []
+    if row["encounter_time"]:
+        try:
+            dt = datetime.fromisoformat(row["encounter_time"].replace("Z", "+00:00"))
+            parts.append(dt.strftime("%-I:%M %p"))
+        except:
+            pass
+    if row["patient_age"]:
+        gender_char = row["patient_gender"][0].upper() if row["patient_gender"] else ""
+        parts.append(f"{row['patient_age']}{gender_char}")
+    if row["chief_complaint"]:
+        parts.append(row["chief_complaint"][:30])
+    
+    subject = "Scribe Note"
+    if parts:
+        subject += " — " + " · ".join(parts)
+    
+    # Send email
+    if not send_soap_note_email(user["email"], subject, row["soap_note"]):
+        raise HTTPException(status_code=500, detail="Failed to send email")
+    
+    record_email(user["id"], note_id)
+    
+    return {"message": "Email sent"}

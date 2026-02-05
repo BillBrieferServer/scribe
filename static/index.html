@@ -154,6 +154,9 @@
         .soap-action-bar { padding: 18px; background: var(--bg-input); border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; }
         .btn-copy-large { background: linear-gradient(135deg, var(--teal), var(--teal-dark)); color: #0a1520; font-weight: 600; padding: 14px 32px; font-size: 1rem; min-height: 48px; box-shadow: 0 4px 15px var(--teal-glow); border-radius: 8px; }
         .btn-copy-large:hover { box-shadow: 0 6px 20px var(--teal-glow); }
+        .btn-email { background: transparent; border: 2px solid var(--teal); color: var(--teal); padding: 14px 24px; font-size: 1rem; min-height: 48px; font-weight: 500; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-email:hover { background: rgba(78, 205, 196, 0.1); box-shadow: 0 4px 15px var(--teal-glow); }
+        .btn-email:disabled { opacity: 0.6; cursor: not-allowed; }
         
         .soap-body { padding: 18px; }
         .soap-label-input { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 18px; }
@@ -369,6 +372,7 @@
                         </div>
                         <div class="soap-action-bar">
                             <button class="btn btn-copy-large" id="copy-btn">📋 Copy to Clipboard</button>
+                            <button class="btn btn-email" id="email-btn">✉️ Email to Me</button>
                             <button class="btn btn-new-patient" id="new-patient-top-btn">New Patient →</button>
                         </div>
                         <div class="soap-body">
@@ -376,6 +380,7 @@
                             <div class="soap-output" id="soap-output"></div>
                         </div>
                         <div class="soap-footer">
+                            <button class="btn btn-email" id="email-btn-bottom">✉️ Email to Me</button>
                             <button class="btn btn-new-patient" id="new-patient-btn">New Patient →</button>
                         </div>
                     </div>
@@ -395,6 +400,7 @@
         var notes = [];
         var demographics = {};
         var currentSoapNote = '';
+        var currentNoteId = null;
         var soapReady = false;
         var currentSubTab = 'dictation';
         var encounterTime = null;
@@ -760,6 +766,7 @@
             document.getElementById('demographics-bar').classList.remove('visible');
             document.getElementById('note-label').value = '';
             document.getElementById('soap-saved').style.display = 'none';
+            currentNoteId = null;
             document.getElementById('soap-ready-badge').classList.remove('visible');
             document.getElementById('soap-title').textContent = '';
             demographics = {};
@@ -887,12 +894,42 @@
                     soap_note: currentSoapNote,
                     encounter_time: encounterTime ? encounterTime.toISOString() : null
                 })
-            }).then(function() {
+            }).then(function(data) {
+                currentNoteId = data.id;
                 document.getElementById('soap-saved').style.display = 'flex';
             }).catch(function(err) {
                 console.error('Auto-save failed:', err);
             });
         }
+        
+        function emailNote(btn) {
+            if (!currentNoteId) {
+                alert('Please wait for the note to save first');
+                return;
+            }
+            btn.disabled = true;
+            var origText = btn.innerHTML;
+            btn.innerHTML = 'Sending...';
+            
+            api('/api/notes/' + currentNoteId + '/email', { method: 'POST' })
+                .then(function() {
+                    btn.innerHTML = '✓ Sent!';
+                    setTimeout(function() { btn.innerHTML = origText; btn.disabled = false; }, 2000);
+                })
+                .catch(function(err) {
+                    alert('Failed to send: ' + err.message);
+                    btn.innerHTML = origText;
+                    btn.disabled = false;
+                });
+        }
+        
+        document.getElementById('email-btn').addEventListener('click', function() {
+            emailNote(this);
+        });
+        
+        document.getElementById('email-btn-bottom').addEventListener('click', function() {
+            emailNote(this);
+        });
         
         document.getElementById('copy-btn').addEventListener('click', function() {
             var text = document.getElementById('soap-output').innerText;
