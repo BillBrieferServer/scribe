@@ -713,8 +713,31 @@
                 requestWakeLock();
             }
         });
-        var processedResults = new Set();
-        var lastFinalText = '';
+        var recentTexts = [];
+        var maxRecent = 20;
+        
+        function normalizeForComparison(text) {
+            return text.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+        
+        function isDuplicate(text) {
+            var norm = normalizeForComparison(text);
+            if (norm.length < 3) return false;
+            for (var i = 0; i < recentTexts.length; i++) {
+                if (recentTexts[i] === norm) return true;
+                // Also check if one contains the other (partial duplicate)
+                if (norm.indexOf(recentTexts[i]) !== -1 || recentTexts[i].indexOf(norm) !== -1) {
+                    if (Math.min(norm.length, recentTexts[i].length) > 10) return true;
+                }
+            }
+            return false;
+        }
+        
+        function addToRecent(text) {
+            var norm = normalizeForComparison(text);
+            recentTexts.push(norm);
+            if (recentTexts.length > maxRecent) recentTexts.shift();
+        }
         
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -722,36 +745,27 @@
             recognition.continuous = true;
             recognition.interimResults = true;
             
-            recognition.onstart = function() {
-                // Don't clear processedResults - keep tracking across restarts
-            };
+            recognition.onstart = function() {};
             recognition.onresult = function(e) {
                 var interim = '';
                 var textarea = document.getElementById('dictation');
                 
-                for (var i = 0; i < e.results.length; i++) {
-                    var result = e.results[i];
-                    if (result.isFinal) {
-                        var text = result[0].transcript.trim();
-                        // Create unique key from index + text to track what we've processed
-                        var key = i + ':' + text;
-                        
-                        if (text && !processedResults.has(key)) {
-                            processedResults.add(key);
-                            
-                            // Also check if this exact text was just added (duplicate phrase)
-                            if (text !== lastFinalText) {
-                                var currentVal = textarea.value;
-                                if (currentVal && !currentVal.endsWith(' ')) {
-                                    currentVal += ' ';
-                                }
-                                textarea.value = currentVal + text + ' ';
-                                lastFinalText = text;
-                            }
+                // Only look at the latest result
+                var latestIndex = e.results.length - 1;
+                var result = e.results[latestIndex];
+                
+                if (result.isFinal) {
+                    var text = result[0].transcript.trim();
+                    if (text && !isDuplicate(text)) {
+                        addToRecent(text);
+                        var currentVal = textarea.value;
+                        if (currentVal && !currentVal.endsWith(' ')) {
+                            currentVal += ' ';
                         }
-                    } else {
-                        interim += result[0].transcript;
+                        textarea.value = currentVal + text + ' ';
                     }
+                } else {
+                    interim = result[0].transcript;
                 }
                 
                 updateWordCount();
@@ -770,8 +784,7 @@
         function startRecording() {
             if (!recognition) return;
             captureEncounterTime();
-            processedResults.clear();
-            lastFinalText = '';
+            recentTexts = [];
             isRecording = true;
             recognition.start();
             document.getElementById('mic-btn').classList.add('recording');
