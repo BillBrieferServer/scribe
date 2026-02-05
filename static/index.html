@@ -364,6 +364,7 @@
         var pendingEmail = null;
         var notes = [];
         var demographics = {};
+        var currentSoapNote = '';
         var soapReady = false;
         var currentSubTab = 'dictation';
         var encounterTime = null;
@@ -724,6 +725,7 @@
                     })
                 });
             }).then(function(data) {
+                currentSoapNote = data.soap_note;
                 var html = data.soap_note
                     .replace(/\*\*(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?\*\*/gi, '<div class="soap-section-header">$1</div>').replace(/^(SUBJECTIVE|OBJECTIVE|ASSESSMENT|PLAN):?$/gim, '<div class="soap-section-header">$1</div>')
                     .replace(/\(ICD-10 codes suggested[^)]*\)/g, '<span class="soap-disclaimer">$&</span>')
@@ -777,7 +779,7 @@
                     specialty: demographics.specialty || null,
                     chief_complaint: demographics.chiefComplaint || null,
                     raw_dictation: document.getElementById('dictation').value,
-                    soap_note: document.getElementById('soap-output').innerText,
+                    soap_note: currentSoapNote,
                     encounter_time: encounterTime ? encounterTime.toISOString() : null
                 })
             }).then(function() {
