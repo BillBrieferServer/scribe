@@ -151,18 +151,18 @@
         .soap-toolbar-left { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         .soap-meta-tag { font-family: 'DM Mono', monospace; font-size: 0.75rem; padding: 5px 10px; background: var(--bg-hover); border-radius: 5px; color: var(--text-secondary); }
         .soap-saved { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--teal); display: none; align-items: center; gap: 4px; }
-        .soap-copy-row { padding: 16px 18px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
-        .btn-copy-large { background: linear-gradient(135deg, var(--teal), var(--teal-dark)); color: #0a1520; font-weight: 600; padding: 12px 28px; font-size: 1rem; box-shadow: 0 4px 15px var(--teal-glow); }
+        .soap-action-bar { padding: 18px; background: var(--bg-input); border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; }
+        .btn-copy-large { background: linear-gradient(135deg, var(--teal), var(--teal-dark)); color: #0a1520; font-weight: 600; padding: 14px 32px; font-size: 1rem; min-height: 48px; box-shadow: 0 4px 15px var(--teal-glow); border-radius: 8px; }
         .btn-copy-large:hover { box-shadow: 0 6px 20px var(--teal-glow); }
-        .copy-hint { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--text-muted); }
+        
         .soap-body { padding: 18px; }
         .soap-label-input { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 18px; }
         .soap-label-input:focus { outline: none; border-color: var(--border-focus); }
         .soap-output { white-space: pre-wrap; line-height: 1.8; font-size: 0.95rem; }
         .soap-output strong { color: var(--teal); }
         .soap-footer { padding: 16px 18px; border-top: 1px solid var(--border); display: flex; justify-content: center; }
-        .btn-new-patient { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 12px 32px; font-size: 0.95rem; }
-        .btn-new-patient:hover { border-color: var(--border-focus); color: var(--text-primary); }
+        .btn-new-patient { background: transparent; border: 2px solid var(--teal); color: var(--teal); padding: 14px 32px; font-size: 1rem; min-height: 48px; font-weight: 500; border-radius: 8px; }
+        .btn-new-patient:hover { background: rgba(78, 205, 196, 0.1); border-color: var(--teal); color: var(--teal); box-shadow: 0 4px 15px var(--teal-glow); }
         .notes-list { display: flex; flex-direction: column; gap: 10px; }
         .note-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; }
         .note-card:hover { border-color: var(--border-focus); }
@@ -331,16 +331,16 @@
                             </div>
                             <div class="soap-saved" id="soap-saved">✓ Saved</div>
                         </div>
-                        <div class="soap-copy-row">
+                        <div class="soap-action-bar">
                             <button class="btn btn-copy-large" id="copy-btn">📋 Copy to Clipboard</button>
-                            <span class="copy-hint">Paste directly into your EHR</span>
+                            <button class="btn btn-new-patient" id="new-patient-top-btn">New Patient →</button>
                         </div>
                         <div class="soap-body">
                             <input type="text" id="note-label" class="soap-label-input" placeholder="Add a personal label (optional)...">
                             <div class="soap-output" id="soap-output"></div>
                         </div>
                         <div class="soap-footer">
-                            <button class="btn btn-new-patient" id="new-patient-btn">↺ New Patient</button>
+                            <button class="btn btn-new-patient" id="new-patient-btn">New Patient →</button>
                         </div>
                     </div>
                 </div>
@@ -657,6 +657,7 @@
         
         document.getElementById('clear-btn').addEventListener('click', clearAll);
         document.getElementById('new-patient-btn').addEventListener('click', clearAll);
+        document.getElementById('new-patient-top-btn').addEventListener('click', clearAll);
         function renderDemographics(data) {
             demographics = data;
             var pills = document.getElementById('demographics-pills');
