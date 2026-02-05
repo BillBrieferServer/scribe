@@ -835,8 +835,13 @@
                 sortedDates.forEach(function(date) {
                     // Sort notes within group by encounter_time/created_at descending
                     groups[date].sort(function(a, b) {
-                        var ta = new Date(a.encounter_time || a.created_at);
-                        var tb = new Date(b.encounter_time || b.created_at);
+                        var sa = a.encounter_time || a.created_at;
+                        var sb = b.encounter_time || b.created_at;
+                        // Handle date format with space instead of T
+                        if (sa && sa.indexOf('T') === -1) sa = sa.replace(' ', 'T') + 'Z';
+                        if (sb && sb.indexOf('T') === -1) sb = sb.replace(' ', 'T') + 'Z';
+                        var ta = new Date(sa);
+                        var tb = new Date(sb);
                         return tb - ta;
                     });
                     var group = document.createElement('div');
