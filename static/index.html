@@ -788,6 +788,7 @@
             try {
                 recognition.start();
                 isRecording = true;
+            } catch(e) { alert("Could not start speech recognition."); return; }
             document.getElementById('mic-btn').classList.add('recording');
             requestWakeLock();
             document.getElementById('dictation').classList.add('listening');
