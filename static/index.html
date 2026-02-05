@@ -716,39 +716,43 @@
                 requestWakeLock();
             }
         });
-        var lastResultIndex = 0;
+        // ═══════════════════════════════════════════
+        // SPEECH RECOGNITION (REPLACE STRATEGY)
+        // ═══════════════════════════════════════════
+        // Instead of tracking indices and appending, we REPLACE the textarea
+        // content on every onresult event. This eliminates duplication both
+        // within sessions and across session restarts.
         
+        var textBeforeSession = '';  // Snapshot of textarea before current session started
+
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SR();
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
-            
+
             recognition.onresult = function(e) {
-                var newFinal = '';
+                var sessionFinal = '';
                 var interim = '';
-                
-                // CRITICAL: Only process results we haven't seen yet
-                for (var i = lastResultIndex; i < e.results.length; i++) {
-                    var transcript = e.results[i][0].transcript;
+
+                // Loop through ALL results in this session (from index 0 every time)
+                // This is safe because we REPLACE, not append
+                for (var i = 0; i < e.results.length; i++) {
                     if (e.results[i].isFinal) {
-                        newFinal += transcript + ' ';
-                        lastResultIndex = i + 1;
+                        sessionFinal += e.results[i][0].transcript + ' ';
                     } else {
-                        interim = transcript;
+                        interim = e.results[i][0].transcript;
                     }
                 }
-                
-                // Append only NEW finalized text
-                if (newFinal) {
-                    var ta = document.getElementById('dictation');
-                    ta.value += newFinal;
-                    ta.scrollTop = ta.scrollHeight;
-                    updateWordCount();
-                }
-                
-                // Show interim text in overlay
+
+                // REPLACE the textarea: pre-session snapshot + this session's complete text
+                var ta = document.getElementById('dictation');
+                ta.value = textBeforeSession + sessionFinal;
+                ta.scrollTop = ta.scrollHeight;
+                updateWordCount();
+
+                // Show interim text in overlay (NOT in textarea)
                 var overlay = document.getElementById('interim-overlay');
                 if (interim) {
                     overlay.textContent = interim;
@@ -757,19 +761,21 @@
                     overlay.classList.remove('active');
                 }
             };
-            
+
             recognition.onerror = function(e) {
-                // Only stop for permission denied - let onend handle other errors
+                // Only stop for permission denied
+                // 'no-speech' and 'aborted' are NORMAL on mobile — do NOT stop
                 if (e.error === 'not-allowed') {
                     alert('Microphone access denied. Allow mic in browser settings.');
                     stopRecording();
                 }
             };
-            
+
             recognition.onend = function() {
                 if (isRecording) {
-                    // Reset index for fresh session and restart
-                    lastResultIndex = 0;
+                    // Snapshot the textarea BEFORE starting the new session
+                    // This captures everything from all previous sessions
+                    textBeforeSession = document.getElementById('dictation').value;
                     try {
                         recognition.start();
                     } catch(err) {
@@ -780,11 +786,11 @@
                 }
             };
         }
-        
+
         function startRecording() {
             if (!recognition) return;
             captureEncounterTime();
-            lastResultIndex = 0;
+            textBeforeSession = document.getElementById('dictation').value;
             try {
                 recognition.start();
                 isRecording = true;
