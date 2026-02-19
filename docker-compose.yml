@@ -5,7 +5,7 @@ services:
     build: .
     container_name: scribe-app
     ports:
-      - "8090:8000"
+      - "127.0.0.1:8090:8000"
     volumes:
       - ./app:/app/app:ro
       - ./static:/app/static:ro
